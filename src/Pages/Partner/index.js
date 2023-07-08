@@ -150,24 +150,6 @@ const Partners = (props) => {
     },
 
     {
-      dataIndex: "cover",
-      key: "cover",
-      title: "Cover",
-      status: true,
-      render: (text, record) => {
-        return (
-          <div className="table-image">
-            {record.cover ? (
-              <img src={`${base.cdnUrl}150x150/${record.cover}`} />
-            ) : (
-              "Зураг оруулаагүй байна"
-            )}
-          </div>
-        );
-      },
-    },
-
-    {
       dataIndex: "logo",
       key: "logo",
       title: "Лого",
@@ -191,14 +173,6 @@ const Partners = (props) => {
       title: "Холбоос линк",
       status: false,
       ...getColumnSearchProps("link"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "views",
-      key: "views",
-      title: "Нийт үзсэн",
-      status: true,
       sorter: (a, b) => handleSort(),
     },
 

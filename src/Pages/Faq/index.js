@@ -141,51 +141,6 @@ const Faqs = (props) => {
     },
 
     {
-      dataIndex: "type",
-      key: "type",
-      title: "Төрөл",
-      status: true,
-      ...getColumnSearchProps("type"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "fullName",
-      key: "fullName",
-      title: "Хүсэлт илгээсэн",
-      status: false,
-      ...getColumnSearchProps("fullName"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "phone",
-      key: "phone",
-      title: "Утасны дугаар",
-      status: true,
-      ...getColumnSearchProps("phone"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "email",
-      key: "email",
-      title: "Имэйл хаяг",
-      status: false,
-      ...getColumnSearchProps("email"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "name",
-      key: "name",
-      title: "Асуулт хариултын гарчиг",
-      status: true,
-      ...getColumnSearchProps("name"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
       dataIndex: "answer",
       key: "answer",
       title: "Хариулт",
@@ -207,21 +162,6 @@ const Faqs = (props) => {
       },
       ...getColumnSearchProps("question"),
       sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "tags",
-      key: "tags",
-      title: "Түлхүүр үгс",
-      status: true,
-      ...getColumnSearchProps("tags"),
-      render: (text, record) => {
-        return (
-          record.tags &&
-          record.tags.length > 0 &&
-          record.tags.map((el) => <Tag color="blue"> {el} </Tag>)
-        );
-      },
     },
 
     {

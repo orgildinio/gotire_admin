@@ -26,7 +26,6 @@ const Tire = (props) => {
   const [searchText, setSearchText] = useState("");
   const [searchedColumn, setSearchedColumn] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const { Option } = Select;
   const [loading, setLoading] = useState({
     visible: false,
     message: "",
@@ -125,6 +124,14 @@ const Tire = (props) => {
 
   const [columns, setColumns] = useState([
     {
+      dataIndex: "tireCode",
+      key: "tireCode",
+      title: "Код",
+      status: true,
+      ...getColumnSearchProps("tireCode"),
+      sorter: (a, b) => handleSort(),
+    },
+    {
       dataIndex: "status",
       key: "status",
       title: "Төлөв",
@@ -132,11 +139,11 @@ const Tire = (props) => {
 
       filters: [
         {
-          text: "Нийтлэгдсэн",
+          text: "Зарагдаагүй",
           value: "true",
         },
         {
-          text: "Ноорог",
+          text: "Зарагдсан",
           value: "false",
         },
       ],
@@ -374,7 +381,7 @@ const Tire = (props) => {
         props.tires.map((el) => {
           const key = el._id;
           delete el._id;
-          el.status = el.status == true ? "Нийтлэгдсэн" : "Ноорог";
+          el.status = el.status == true ? "Зарагдаагүй" : "Зарагдсан";
 
           el.createUser = el.createUser && el.createUser.firstName;
           el.updateUser = el.updateUser && el.updateUser.firstName;
@@ -384,7 +391,8 @@ const Tire = (props) => {
           el.updateAt = moment(el.updateAt)
             .utcOffset("+0800")
             .format("YYYY-MM-DD HH:mm:ss");
-
+          el.price = new Intl.NumberFormat().format(el.price) + "₮";
+          el.discount = new Intl.NumberFormat().format(el.discount) + "₮";
           el.make = el.make && el.make.name;
           el.modal = el.modal && el.modal.name;
 

@@ -125,9 +125,9 @@ function App(props) {
             <Switch>
               <Route path="/" exact component={Dashboard} />
               //FAQ
-              <Route path={"/faq/edit/:id"} component={FaqEdit} />
-              <Route path="/faq/add" component={FaqAdd} />
-              <Route path="/faq" exact component={Faq} />
+              <Route path={"/faqs/edit/:id"} component={FaqEdit} />
+              <Route path="/faqs/add" component={FaqAdd} />
+              <Route path="/faqs" exact component={Faq} />
               //Gallery
               <Route path={"/gallery/edit/:id"} component={GalleryEdit} />
               <Route path="/gallery/add" component={GalleryAdd} />
@@ -143,17 +143,17 @@ function App(props) {
               <Route path="/pages/add" component={PageAdd} />
               <Route path="/pages" exact component={Page} />
               // Partner
-              <Route path={"/partner/edit/:id"} component={PartnerEdit} />
-              <Route path="/partner/add" component={PartnerAdd} />
-              <Route path="/partner" exact component={Partner} />
+              <Route path={"/partners/edit/:id"} component={PartnerEdit} />
+              <Route path="/partners/add" component={PartnerAdd} />
+              <Route path="/partners" exact component={Partner} />
               //Padtype
               <Route path={"/paytype/edit/:id"} component={PaytypeEdit} />
               <Route path="/paytype/add" component={PaytypeAdd} />
               <Route path="/paytype" exact component={Paytype} />
               //Service
-              <Route path={"/service/edit/:id"} component={ServiceEdit} />
-              <Route path="/service/add" component={ServiceAdd} />
-              <Route path="/service" exact component={Service} />
+              <Route path={"/services/edit/:id"} component={ServiceEdit} />
+              <Route path="/services/add" component={ServiceAdd} />
+              <Route path="/services" exact component={Service} />
               //Tire
               <Route path={"/tire/edit/:id"} component={TireEdit} />
               <Route path="/tire/add" component={TireAdd} />

@@ -248,7 +248,7 @@ const Edit = (props) => {
                               });
                           }}
                         >
-                          Нэмэх
+                          Хадгалах
                         </Button>
                         <Button
                           key="draft"

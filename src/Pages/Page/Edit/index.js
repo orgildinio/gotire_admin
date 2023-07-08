@@ -22,10 +22,12 @@ import { loadMenus } from "../../../redux/actions/menuActions";
 import { loadFooterMenus } from "../../../redux/actions/footerMenuActions";
 import { loadNewsCategories } from "../../../redux/actions/newsCategoryActions";
 import * as actions from "../../../redux/actions/pageActions";
-import { getExcelData as ServiceDataGet } from "../../../redux/actions/serviceActions";
 
-import { getExcelData as PartnerGet } from "../../../redux/actions/partnerActions";
-import { getExcelData as GetPageDatas } from "../../../redux/actions/pageActions";
+import { getExcelData as loadTires } from "../../../redux/actions/tireActions";
+import { getExcelData as loadWheels } from "../../../redux/actions/wheelActions";
+import { getExcelData as loadServices } from "../../../redux/actions/serviceActions";
+import { getExcelData as loadPages } from "../../../redux/actions/pageActions";
+import { getExcelData as loadPartners } from "../../../redux/actions/partnerActions";
 
 // Lib
 import base from "../../../base";
@@ -74,12 +76,12 @@ const Add = (props) => {
     props.getPage(props.match.params.id);
     props.loadFooterMenus();
     props.loadMenus();
-
-    props.serviceDataGet();
-
-    props.partnerDataGet();
+    props.loadTires();
+    props.loadServices();
+    props.loadPages();
+    props.loadPartners();
     props.loadNewsCategories();
-    props.getPageDatas();
+    props.loadWheels();
   };
 
   const clear = () => {
@@ -286,6 +288,13 @@ const Add = (props) => {
   useEffect(() => {
     let data = [];
     switch (modal) {
+      case "wheels": {
+        data = props.wheels.map((wheel) => ({
+          value: wheel._id,
+          label: wheel.name,
+        }));
+        break;
+      }
       case "services": {
         data = props.services.map((service) => ({
           value: service._id,
@@ -293,7 +302,13 @@ const Add = (props) => {
         }));
         break;
       }
-
+      case "tires": {
+        data = props.tires.map((tire) => ({
+          value: tire._id,
+          label: tire.name,
+        }));
+        break;
+      }
       case "partners": {
         data = props.partners.map((partner) => ({
           value: partner._id,
@@ -379,10 +394,17 @@ const Add = (props) => {
                               onChange={(value) => setModal(value)}
                               options={[
                                 {
+                                  value: "platforms",
+                                  label: "Платформууд",
+                                },
+                                {
                                   value: "services",
                                   label: "Үйлчилгээнүүд",
                                 },
-
+                                {
+                                  value: "costs",
+                                  label: "Үнийн мэдээлэл",
+                                },
                                 {
                                   value: "partners",
                                   label: "Хамтрагч компани",
@@ -401,11 +423,14 @@ const Add = (props) => {
                             name="modal"
                             rules={
                               modalActive &&
-                              modalActive !== "contact" && [requiredRule]
+                              modalActive !== "contact" &&
+                              modalActive !== "costs" && [requiredRule]
                             }
                             style={{
                               display:
-                                modalActive && modalActive !== "contact"
+                                modalActive &&
+                                modalActive !== "contact" &&
+                                modalActive !== "costs"
                                   ? "block"
                                   : "none",
                             }}
@@ -841,7 +866,8 @@ const mapStateToProps = (state) => {
     loading: state.pageReducer.loading,
     page: state.pageReducer.page,
     services: state.serviceReducer.excelData,
-
+    wheels: state.wheelReducer.excelData,
+    tires: state.tireReducer.excelData,
     partners: state.partnerReducer.excelData,
     pages: state.pageReducer.excelData,
   };
@@ -854,10 +880,12 @@ const mapDispatchToProps = (dispatch) => {
     loadMenus: () => dispatch(loadMenus()),
     loadNewsCategories: () => dispatch(loadNewsCategories()),
     updatePage: (id, data) => dispatch(actions.updatePage(id, data)),
-    serviceDataGet: (query) => dispatch(ServiceDataGet(query)),
-    partnerDataGet: (query) => dispatch(PartnerGet(query)),
+    loadServices: (query) => dispatch(loadServices(query)),
+    loadTires: (query) => dispatch(loadTires(query)),
+    loadWheels: (query) => dispatch(loadWheels(query)),
+    loadPartners: (query) => dispatch(loadPartners(query)),
+    loadPages: (query) => dispatch(loadPages(query)),
     getPage: (id) => dispatch(actions.getPage(id)),
-    getPageDatas: (query) => dispatch(GetPageDatas(query)),
     clear: () => dispatch(actions.clear()),
   };
 };

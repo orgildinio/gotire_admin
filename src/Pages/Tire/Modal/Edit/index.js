@@ -134,7 +134,7 @@ const Edit = (props) => {
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Загвар нэмэх" />
+        <PageTitle name="Загвар шинэчлэх" />
         <div className="page-sub-menu"></div>
         <div className="content">
           <Loader show={loading.visible}> {loading.message} </Loader>
@@ -212,7 +212,7 @@ const Edit = (props) => {
                               });
                           }}
                         >
-                          Нэмэх
+                          Хадгалах
                         </Button>
                         <Button
                           key="draft"

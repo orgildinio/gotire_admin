@@ -12,6 +12,7 @@ import {
   Select,
   InputNumber,
   DatePicker,
+  AutoComplete,
 } from "antd";
 import { connect } from "react-redux";
 import { Editor } from "@tinymce/tinymce-react";
@@ -32,7 +33,6 @@ import * as actions from "../../../redux/actions/tireActions";
 import base from "../../../base";
 import axios from "../../../axios-base";
 import { toastControl } from "src/lib/toasControl";
-import { menuGenerateData } from "../../../lib/menuGenerate";
 import { convertFromdata } from "../../../lib/handleFunction";
 
 const requiredRule = {
@@ -49,7 +49,14 @@ const Add = (props) => {
   const [videos, setVideos] = useState([]);
   const [type, setType] = useState("default");
   const [choiseData, setChoiseDate] = useState();
-  const [gData, setGData] = useState([]);
+  const [autoComplete, setAutoComplete] = useState(null);
+
+  const [checkedRadio, setCheckedRadio] = useState({
+    status: true,
+    star: false,
+    isDiscount: false,
+  });
+
   const [setProgress] = useState(0);
   const [loading, setLoading] = useState({
     visible: false,
@@ -66,11 +73,7 @@ const Add = (props) => {
     props.clear();
     form.resetFields();
     setPictures([]);
-    setAudios([]);
-    setVideos([]);
     setType("default");
-
-    setGData([]);
     setLoading(false);
   };
 
@@ -87,8 +90,10 @@ const Add = (props) => {
 
     const data = {
       ...values,
-      type,
+      star: values.star || false,
+      isDiscount: values.isDiscount || false,
     };
+
     data.year = choiseData;
     if (status === "draft") {
       data.status = false;
@@ -124,36 +129,11 @@ const Add = (props) => {
     let deleteFile;
     let list;
 
-    switch (stType) {
-      case "audios":
-        index = audios.indexOf(file);
-        deleteFile = audios[index].name;
-        list = audios.slice();
-        list.splice(index, 1);
-        setAudios(list);
-        break;
-      case "pictures":
-        index = pictures.indexOf(file);
-        deleteFile = pictures[index].name;
-        list = pictures.slice();
-        list.splice(index, 1);
-        setPictures(list);
-        break;
-      case "videos":
-        index = videos.indexOf(file);
-        deleteFile = videos[index].name;
-        list = videos.slice();
-        list.splice(index, 1);
-        setVideos(list);
-        break;
-      default:
-        index = pictures.indexOf(list);
-        deleteFile = pictures[index].name;
-        list = pictures.slice();
-        list.splice(index, 1);
-        setPictures(list);
-        break;
-    }
+    index = pictures.indexOf(file);
+    deleteFile = pictures[index].name;
+    list = pictures.slice();
+    list.splice(index, 1);
+    setPictures(list);
 
     axios
       .delete("/imgupload", { data: { file: deleteFile } })
@@ -166,38 +146,6 @@ const Add = (props) => {
   };
 
   // CONFIGS
-
-  const uploadFile = async (options, stType) => {
-    const { onSuccess, onError, file, onProgress } = options;
-    const fmData = new FormData();
-    const config = {
-      headers: { "content-type": "multipart/form-data" },
-      onUploadProgress: (event) => {
-        const percent = Math.floor((event.loaded / event.total) * 100);
-        setProgress(percent);
-        if (percent === 100) {
-          setTimeout(() => setProgress(0), 1000);
-        }
-        onProgress({ percent: (event.loaded / event.total) * 100 });
-      },
-    };
-    fmData.append("file", file);
-    try {
-      setLoading({ visible: true, message: "Түр хүлээнэ үү файл хуулж байна" });
-      const res = await axios.post("/imgupload/file", fmData, config);
-      const data = {
-        name: res.data.data,
-        status: "done",
-      };
-      setFunction(stType, data);
-      onSuccess("Ok");
-      message.success(res.data.data + " Хуулагдлаа");
-      setLoading({ visible: false, message: "" });
-    } catch (error) {
-      toastControl("error", error);
-      onError({ error });
-    }
-  };
 
   const uploadImage = async (options) => {
     const { onSuccess, onError, file, onProgress } = options;
@@ -242,34 +190,22 @@ const Add = (props) => {
     listType: "picture",
   };
 
-  const videoUploadOptions = {
-    onRemove: (file) => handleRemove("videos", file),
-    customRequest: (options) => uploadFile(options, "videos"),
-    fileList: [...videos],
-    accept: "video/*",
-    name: "video",
-    multiple: true,
-  };
-
-  const audioUploadOptions = {
-    onRemove: (file) => handleRemove("audios", file),
-    customRequest: (options) => uploadFile(options, "audios"),
-    fileList: [...audios],
-    accept: "audio/*",
-    name: "audio",
-    multiple: true,
-  };
-
   // USEEFFECT
   useEffect(() => {
     init();
+    const fetchData = async () => {
+      const result = await axios.get("/tires/groups");
+      if (result && result.data) {
+        setAutoComplete(() => ({ ...result.data }));
+      } else if (result && result.error) {
+        toastControl("error", result.error);
+      }
+    };
+
+    fetchData().catch((err) => console.log(err));
+
     return () => clear();
   }, []);
-
-  useEffect(() => {
-    const data = menuGenerateData(props.categories);
-    setGData(data);
-  }, [props.categories]);
 
   // Ямар нэгэн алдаа эсвэл амжилттай үйлдэл хийгдвэл энд useEffect барьж аваад TOAST харуулна
   useEffect(() => {
@@ -351,8 +287,15 @@ const Add = (props) => {
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <InputNumber
+                            <AutoComplete
                               style={{ width: "100%" }}
+                              options={
+                                autoComplete &&
+                                autoComplete["width"] &&
+                                autoComplete["width"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
                               placeholder="Өргөн оруулна уу"
                             />
                           </Form.Item>
@@ -364,8 +307,15 @@ const Add = (props) => {
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <InputNumber
+                            <AutoComplete
                               style={{ width: "100%" }}
+                              options={
+                                autoComplete &&
+                                autoComplete["height"] &&
+                                autoComplete["height"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
                               placeholder="Хажуугийн талын хэмжээ оруулна уу"
                             />
                           </Form.Item>
@@ -377,7 +327,14 @@ const Add = (props) => {
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <InputNumber
+                            <AutoComplete
+                              options={
+                                autoComplete &&
+                                autoComplete["diameter"] &&
+                                autoComplete["diameter"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
                               style={{ width: "100%" }}
                               placeholder="Диаметрын хэмжээ оруулна уу"
                             />
@@ -450,20 +407,28 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
+                        {checkedRadio.isDiscount === true && (
+                          <div className="col-4">
+                            <Form.Item
+                              label="Хямдарсан үнэ"
+                              name="discount"
+                              rules={[requiredRule]}
+                              hasFeedback
+                            >
+                              <InputNumber
+                                style={{ width: "100%" }}
+                                placeholder="Хямдарсан үнэ оруулна уу"
+                              />
+                            </Form.Item>
+                          </div>
+                        )}
                         <div className="col-4">
                           <Form.Item
-                            label="Хөнгөлөлт"
-                            name="discount"
+                            label="Багц"
+                            name="setOf"
+                            rules={[requiredRule]}
                             hasFeedback
                           >
-                            <InputNumber
-                              style={{ width: "100%" }}
-                              placeholder="Хөнгөлөлт оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item label="Багц" name="setOf" hasFeedback>
                             <InputNumber
                               style={{ width: "100%" }}
                               placeholder="Багц оруулна уу"
@@ -590,81 +555,6 @@ const Add = (props) => {
                       </div>
                     </div>
                   </div>
-                  <div className="row">
-                    <div className="col-6">
-                      <div className="card">
-                        <div class="card-header">
-                          <h3 class="card-title">Зураг оруулах</h3>
-                        </div>
-                        <div className="card-body">
-                          <Dragger
-                            {...uploadOptions}
-                            className="upload-list-inline"
-                          >
-                            <p className="ant-upload-drag-icon">
-                              <InboxOutlined />
-                            </p>
-                            <p className="ant-upload-text">
-                              Зургаа энэ хэсэг рүү чирч оруулна уу
-                            </p>
-                            <p className="ant-upload-hint">
-                              Нэг болон түүнээс дээш файл хуулах боломжтой
-                            </p>
-                          </Dragger>
-                        </div>
-                      </div>
-                    </div>
-                    {type === "video" && (
-                      <div className="col-6">
-                        <div className="card">
-                          <div class="card-header">
-                            <h3 class="card-title">Видео оруулах</h3>
-                          </div>
-                          <div className="card-body">
-                            <Dragger
-                              {...videoUploadOptions}
-                              className="upload-list-inline"
-                            >
-                              <p className="ant-upload-drag-icon">
-                                <InboxOutlined />
-                              </p>
-                              <p className="ant-upload-text">
-                                Видеогоо энэ хэсэг рүү чирч оруулна уу
-                              </p>
-                              <p className="ant-upload-hint">
-                                Нэг болон түүнээс дээш файл хуулах боломжтой
-                              </p>
-                            </Dragger>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {type === "audio" && (
-                      <div className="col-6">
-                        <div className="card">
-                          <div class="card-header">
-                            <h3 class="card-title">Аудио оруулах</h3>
-                          </div>
-                          <div className="card-body">
-                            <Dragger
-                              {...audioUploadOptions}
-                              className="upload-list-inline"
-                            >
-                              <p className="ant-upload-drag-icon">
-                                <InboxOutlined />
-                              </p>
-                              <p className="ant-upload-text">
-                                Аудиогоо энэ хэсэг рүү чирч оруулна уу
-                              </p>
-                              <p className="ant-upload-hint">
-                                Нэг болон түүнээс дээш файл хуулах боломжтой
-                              </p>
-                            </Dragger>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
                 <div className="col-4">
                   <div className="card">
@@ -673,13 +563,48 @@ const Add = (props) => {
                     </div>
                     <div className="card-body">
                       <div className="row">
-                        <div className="col-6">
-                          <Form.Item label="Идэвхтэй эсэх" name="status">
+                        <div className="col-12">
+                          <Form.Item label="Зарагдсан эсэх" name="status">
                             <Switch
-                              checkedChildren="Идэвхтэй"
-                              unCheckedChildren="Идэвхгүй"
+                              checkedChildren="Зарагдаагүй"
+                              unCheckedChildren="Зарагдсан"
                               size="medium"
                               defaultChecked
+                              checked={checkedRadio.status}
+                              onChange={(checked) =>
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  status: checked,
+                                }))
+                              }
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12">
+                          <Form.Item label="Онцлох" name="star">
+                            <Switch
+                              size="medium"
+                              checked={checkedRadio.star}
+                              onChange={(checked) =>
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  star: checked,
+                                }))
+                              }
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12">
+                          <Form.Item label="Хямдрал зарлах" name="isDiscount">
+                            <Switch
+                              size="medium"
+                              checked={checkedRadio.isDiscount}
+                              onChange={(checked) =>
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  isDiscount: checked,
+                                }))
+                              }
                             />
                           </Form.Item>
                         </div>
@@ -703,7 +628,7 @@ const Add = (props) => {
                               });
                           }}
                         >
-                          Нийтлэх
+                          Нэмэх
                         </Button>
                         <Button
                           key="draft"
@@ -719,12 +644,34 @@ const Add = (props) => {
                               });
                           }}
                         >
-                          Ноороглох
+                          Зарагдсан
                         </Button>
                         <Button onClick={() => props.history.goBack()}>
                           Буцах
                         </Button>
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="card">
+                    <div class="card-header">
+                      <h3 class="card-title">Зураг оруулах</h3>
+                    </div>
+                    <div className="card-body">
+                      <Dragger
+                        {...uploadOptions}
+                        className="upload-list-inline"
+                      >
+                        <p className="ant-upload-drag-icon">
+                          <InboxOutlined />
+                        </p>
+                        <p className="ant-upload-text">
+                          Зургаа энэ хэсэг рүү чирч оруулна уу
+                        </p>
+                        <p className="ant-upload-hint">
+                          Нэг болон түүнээс дээш файл хуулах боломжтой
+                        </p>
+                      </Dragger>
                     </div>
                   </div>
                 </div>

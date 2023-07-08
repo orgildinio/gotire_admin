@@ -1,3 +1,4 @@
+import axios from "../../axios-base";
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { NavLink, withRouter } from "react-router-dom";
@@ -8,9 +9,21 @@ import * as actions from "../../redux/actions/loginActions";
 
 const Side = (props) => {
   const [role, setRole] = useState("operator");
+  const [count, setCount] = useState(0);
   useEffect(() => {
     setRole(props.role);
   }, [props]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const result = await axios.get("/orders/todaycount");
+      if (result.data) {
+        setCount(result.data.count);
+      }
+    };
+
+    fetchData().catch((err) => console.log(err));
+  }, []);
 
   return (
     <aside className="main-sidebar sidebar-dark-primary elevation-4">
@@ -93,6 +106,7 @@ const Side = (props) => {
               >
                 <i className="nav-icon fa fa-shopping-cart" />
                 <p>Захиалгууд</p>
+                <span class="right badge badge-danger">{count}</span>
               </NavLink>
             </li>
             <li className="nav-item">

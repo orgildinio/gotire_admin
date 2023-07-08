@@ -17,10 +17,9 @@ import { toastControl } from "../../lib/toasControl";
 import Loader from "../../Components/Generals/Loader";
 
 // Actions
-import * as actions from "../../redux/actions/newsActions";
-import { loadNewsCategories } from "../../redux/actions/newsCategoryActions";
+import * as actions from "../../redux/actions/wheelActions";
 
-const News = (props) => {
+const Wheel = (props) => {
   const searchInput = useRef(null);
   //STATES
   const [searchText, setSearchText] = useState("");
@@ -125,6 +124,14 @@ const News = (props) => {
 
   const [columns, setColumns] = useState([
     {
+      dataIndex: "wheelCode",
+      key: "wheelCode",
+      title: "Обудын код",
+      status: true,
+      ...getColumnSearchProps("wheelCode"),
+      sorter: (a, b) => handleSort(),
+    },
+    {
       dataIndex: "status",
       key: "status",
       title: "Төлөв",
@@ -132,11 +139,29 @@ const News = (props) => {
 
       filters: [
         {
-          text: "Нийтлэгдсэн",
+          text: "Зарагдаагүй",
           value: "true",
         },
         {
-          text: "Ноорог",
+          text: "Зарагдсан",
+          value: "false",
+        },
+      ],
+      sorter: (a, b) => handleSort(),
+    },
+    {
+      dataIndex: "isDiscount",
+      key: "isDiscount",
+      title: "Хөнгөлөлтэй эсэх",
+      status: true,
+
+      filters: [
+        {
+          text: "Хөнгөлөлтэй",
+          value: "true",
+        },
+        {
+          text: "Хөнгөлөлтгүй",
           value: "false",
         },
       ],
@@ -146,7 +171,7 @@ const News = (props) => {
       dataIndex: "star",
       key: "star",
       title: "Онцлох",
-      status: true,
+      status: false,
 
       filters: [
         {
@@ -168,14 +193,7 @@ const News = (props) => {
       ...getColumnSearchProps("name"),
       sorter: (a, b) => handleSort(),
     },
-    {
-      dataIndex: "type",
-      key: "type",
-      title: "Нийтлэлийн төрөл",
-      status: true,
 
-      sorter: (a, b) => handleSort(),
-    },
     {
       dataIndex: "pictures",
       key: "pictures",
@@ -194,21 +212,102 @@ const News = (props) => {
         );
       },
     },
+
     {
-      dataIndex: "categories",
-      key: "categories",
-      title: "Ангилал",
+      dataIndex: "diameter",
+      key: "diameter",
+      title: "Диаметр",
       status: true,
-      filters:
-        props.categories &&
-        props.categories.map((cat) => ({
-          text: cat.name,
-          value: cat._id,
-        })),
-      render: (text, record) => {
-        return record.categories.map((el) => <Tag color="blue"> {el} </Tag>);
-      },
+      ...getColumnSearchProps("diameter"),
+      sorter: (a, b) => handleSort(),
     },
+    {
+      dataIndex: "height",
+      key: "height",
+      title: "Өндөр",
+      status: true,
+      ...getColumnSearchProps("height"),
+      sorter: (a, b) => handleSort(),
+    },
+    {
+      dataIndex: "boltPattern",
+      key: "boltPattern",
+      title: "Болтны нүх",
+      status: true,
+      ...getColumnSearchProps("boltPattern"),
+      sorter: (a, b) => handleSort(),
+    },
+    {
+      dataIndex: "inSet",
+      key: "inSet",
+      title: "Дотогшоо",
+      status: false,
+      ...getColumnSearchProps("inSet"),
+      sorter: (a, b) => handleSort(),
+    },
+    {
+      dataIndex: "offSet",
+      key: "offSet",
+      title: "Гадагшаа",
+      status: false,
+      ...getColumnSearchProps("offSet"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "rim",
+      key: "rim",
+      title: "RIM Хэмжээ",
+      status: true,
+      ...getColumnSearchProps("rim"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "price",
+      key: "price",
+      title: "Үнэ",
+      status: true,
+      ...getColumnSearchProps("price"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "discount",
+      key: "discount",
+      title: "Хямдарсан үнэ",
+      status: false,
+      ...getColumnSearchProps("discount"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "threadSize",
+      key: "threadSize",
+      title: "Болтны нүхний хэмжээ",
+      status: false,
+      ...getColumnSearchProps("threadSize"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "centerBore",
+      key: "centerBore",
+      title: "Голын нүхний диаметр",
+      status: false,
+      ...getColumnSearchProps("centerBore"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "setOf",
+      key: "setOf",
+      title: "Багц",
+      status: true,
+      ...getColumnSearchProps("setOf"),
+      sorter: (a, b) => handleSort(),
+    },
+
     {
       dataIndex: "views",
       key: "views",
@@ -256,12 +355,12 @@ const News = (props) => {
     if (selectedRowKeys.length != 1) {
       toastControl("error", "Нэг өгөгдөл сонгоно уу");
     } else {
-      history.push(`/news/edit/${selectedRowKeys[0]}`);
+      history.push(`/wheel/edit/${selectedRowKeys[0]}`);
     }
   };
 
   const handleDelete = () => {
-    props.deleteMultNews(selectedRowKeys);
+    props.deleteMultWheel(selectedRowKeys);
   };
 
   // -- MODAL STATE
@@ -296,7 +395,7 @@ const News = (props) => {
   useEffect(() => {
     if (querys) {
       const query = queryBuild();
-      props.loadNews(query);
+      props.loadWheel(query);
     }
   }, [querys]);
 
@@ -318,17 +417,21 @@ const News = (props) => {
 
   // -- NEWS GET DONE EFFECT
   useEffect(() => {
-    if (props.allNews) {
+    if (props.wheels) {
       const refData = [];
 
-      props.allNews.length > 0 &&
-        props.allNews.map((el) => {
+      props.wheels.length > 0 &&
+        props.wheels.map((el) => {
           const key = el._id;
           delete el._id;
-          el.status = el.status == true ? "Нийтлэгдсэн" : "Ноорог";
+          el.status = el.status == true ? "Зарагдаагүй" : "Зарагдсан";
           el.star = el.star == true ? "Онцгойлсон" : "Энгийн";
+          el.isDiscount =
+            el.isDiscount == true ? "Хөнгөлөлтэй" : "Хөнгөлөлтгүй";
           el.createUser = el.createUser && el.createUser.firstName;
           el.updateUser = el.updateUser && el.updateUser.firstName;
+          el.price = new Intl.NumberFormat().format(el.price) + "₮";
+          el.discount = new Intl.NumberFormat().format(el.discount) + "₮";
           el.createAt = moment(el.createAt)
             .utcOffset("+0800")
             .format("YYYY-MM-DD HH:mm:ss");
@@ -336,18 +439,16 @@ const News = (props) => {
             .utcOffset("+0800")
             .format("YYYY-MM-DD HH:mm:ss");
 
-          el.categories = el.categories.map((el) => el.name);
-
           refData.push({
             dataIndex: key,
             key,
             ...el,
           });
         });
-      // console.log(refData);
+
       setData(refData);
     }
-  }, [props.allNews]);
+  }, [props.wheels]);
 
   // Start moment
   useEffect(() => {
@@ -367,8 +468,7 @@ const News = (props) => {
   // -- INIT
   const init = () => {
     const query = queryBuild();
-    props.loadNews(`${query}`);
-    props.loadNewsCategories();
+    props.loadWheel(`${query}`);
   };
 
   const clear = () => {};
@@ -473,7 +573,7 @@ const News = (props) => {
       }
       case "edit": {
         if (selectedRowKeys && selectedRowKeys.length === 1) {
-          props.history.replace("/news/edit/" + selectedRowKeys[0]);
+          props.history.replace("/wheel/edit/" + selectedRowKeys[0]);
         } else {
           toastControl("error", "Нэг өгөгдөл сонгоно уу");
         }
@@ -520,7 +620,7 @@ const News = (props) => {
   // -- CONVER JSON  TO EXCEL
   const exportExcel = async () => {
     const query = queryBuild();
-    const response = await axios.get("news/excel?" + query);
+    const response = await axios.get("wheel/excel?" + query);
     let excelData = [];
     if (response) {
       const data = response.data.data;
@@ -533,12 +633,20 @@ const News = (props) => {
 
           if (col.key === "status" && col.status === true) {
             el.status =
-              el.status && el.status == true ? "Нийтлэгдсэн" : "Ноорог";
+              el.status && el.status == true ? "Зарагдаагүй" : "Зарагдсан";
           }
 
           if (col.key === "star" && col.status === true) {
             el.star = el.star && el.star == true ? "Онцолсон" : "Энгийн";
           }
+
+          if (col.key === "isDiscount" && col.status === true) {
+            el.isDiscount =
+              el.isDiscount && el.isDiscount == true
+                ? "Хөнгөлөлтэй"
+                : "Хөнгөлөлтгүй";
+          }
+
           if (col.key === "createUser" && col.status === true) {
             el.createUser = el.createUser && el.createUser.firstName;
           }
@@ -582,7 +690,6 @@ const News = (props) => {
       const date = new Date().toLocaleDateString();
       XLSX.utils.sheet_add_aoa(worksheet, Header);
       XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-
       XLSX.writeFile(workbook, `${date}.xlsx`);
     }
     setLoading({
@@ -596,20 +703,20 @@ const News = (props) => {
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Нийтлэл" />
+        <PageTitle name="Обуд" />
         <div className="content">
           <Loader show={loading.visible}> {loading.message}</Loader>
           <div className="container-fluid">
             <div className="card datatable-card">
               <div className="card-header">
-                <h3 className="card-title">Бүх нийтлэл</h3>
+                <h3 className="card-title">Бүх обудууд</h3>
               </div>
               <div className="card-body datatable-card-body">
                 <div className="datatable-header-tools">
                   <div className="datatable-actions">
                     <button
                       className="datatable-action add-bg"
-                      onClick={() => history.push(`/news/add`)}
+                      onClick={() => history.push(`/wheel/add`)}
                     >
                       <i className="fa fa-plus"></i> Нэмэх
                     </button>
@@ -741,7 +848,6 @@ const News = (props) => {
       >
         <div className="tableBox">
           <p>
-            {" "}
             Та нийт <b> {selectedRowKeys.length} </b> мэдээлэл сонгосон байна
             устгахдаа итгэлтэй байна уу? <br /> Хэрэв устгавал дахин сэргээх
             боломжгүйг анхаарна уу.{" "}
@@ -754,28 +860,20 @@ const News = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    loading: state.newsReducer.loading,
-    success: state.newsReducer.success,
-    error: state.newsReducer.error,
-    allNews: state.newsReducer.allNews,
-    pagination: state.newsReducer.paginationLast,
-    categories: state.newsCategoryReducer.categories,
-    // excelData: state.userReducer.excelData,
-    // excelLoading: state.userReducer.excelLoading,
-    news: state.newsReducer.news,
+    loading: state.wheelReducer.loading,
+    success: state.wheelReducer.success,
+    error: state.wheelReducer.error,
+    wheels: state.wheelReducer.wheels,
+    pagination: state.wheelReducer.paginationLast,
   };
 };
 
 const mapDispatchToProp = (dispatch) => {
   return {
-    saveNews: (data) => dispatch(actions.saveNews(data)),
-    loadNewsCategories: () => dispatch(loadNewsCategories()),
-    loadNews: (query) => dispatch(actions.loadNews(query)),
-    getNews: (id) => dispatch(actions.getNews(id)),
-    deleteMultNews: (ids) => dispatch(actions.deleteMultNews(ids)),
-    getExcelData: (query) => dispatch(actions.getExcelData(query)),
+    loadWheel: (query) => dispatch(actions.loadWheel(query)),
+    deleteMultWheel: (ids) => dispatch(actions.deleteMultWheel(ids)),
     clear: () => dispatch(actions.clear()),
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProp)(News);
+export default connect(mapStateToProps, mapDispatchToProp)(Wheel);

@@ -122,40 +122,161 @@ const Gallery = (props) => {
 
   const [columns, setColumns] = useState([
     {
-      dataIndex: "name",
-      key: "name",
-      title: "Зургийн нэр",
+      dataIndex: "status",
+      key: "status",
+      title: "Төлөв",
       status: true,
-      ...getColumnSearchProps("name"),
+
+      filters: [
+        {
+          text: "Идэвхтэй",
+          value: "true",
+        },
+        {
+          text: "Идэвхгүй",
+          value: "false",
+        },
+      ],
       sorter: (a, b) => handleSort(),
     },
 
     {
-      dataIndex: "picture",
-      key: "picture",
-      title: "Зураг",
+      dataIndex: "orderNumber",
+      key: "orderNumber",
+      title: "Захиалгын дугаар",
+      status: true,
+      ...getColumnSearchProps("orderNumber"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "paid",
+      key: "paid",
+      title: "Төлбөр төлсөн эсэх",
+      status: true,
+
+      filters: [
+        {
+          text: "Төлбөр хийгдсэн",
+          value: "true",
+        },
+        {
+          text: "Төлбөр төлөгдөөгүй",
+          value: "false",
+        },
+      ],
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "paidType",
+      key: "paidType",
+      title: "Төлбөрийн төрөл",
+      status: true,
+
+      filters: [
+        {
+          text: "Qpay",
+          value: "qpay",
+        },
+        {
+          text: "Дансаар шилжүүлсэн",
+          value: "bankaccount",
+        },
+      ],
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "wheels",
+      key: "wheels",
+      title: "Захиалсан обуд",
+      status: true,
+      render: (text, record) => {
+        return record.wheels.map((wheel) => wheel.productInfo.wheelCode + ",");
+      },
+    },
+
+    {
+      dataIndex: "tires",
+      key: "tires",
+      title: "Захиалсан дугуй",
+      status: true,
+      render: (text, record) => {
+        return record.tires.map((tire) => tire.productInfo.tireCode + ",");
+      },
+    },
+
+    {
+      dataIndex: "totalPrice",
+      key: "totalPrice",
+      title: "Захиалгын нийт дүн",
+      status: true,
+      ...getColumnSearchProps("totalPrice"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "lastName",
+      key: "lastName",
+      title: "Захиалагчын овог",
+      status: false,
+      ...getColumnSearchProps("lastName"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "firstName",
+      key: "firstName",
+      title: "Захиалсан",
+      status: true,
+      ...getColumnSearchProps("firstName"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+      title: "Утасны дугаар",
+      status: true,
+      ...getColumnSearchProps("phoneNumber"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      dataIndex: "email",
+      key: "email",
+      title: "Имэйл хаяг",
+      status: false,
+      ...getColumnSearchProps("email"),
+      sorter: (a, b) => handleSort(),
+    },
+
+    {
+      key: "keyPassword",
+      title: "Дэлгэрэнгүй",
       status: true,
       render: (text, record) => {
         return (
-          <div className="table-image">
-            {record.picture ? (
-              <img src={`${base.cdnUrl}150x150/${record.picture}`} />
-            ) : (
-              "Зураг оруулаагүй байна"
-            )}
-          </div>
+          <button
+            className="changePasswordBtn"
+            onClick={() => history.push(`/order/views/${record.key}`)}
+          >
+            Дэлгэрэнгүй
+          </button>
         );
       },
     },
 
     {
-      dataIndex: "createUser",
-      key: "createUser",
-      title: "Бүртгэсэн",
-      status: true,
-      ...getColumnSearchProps("createUser"),
+      dataIndex: "userId",
+      key: "userId",
+      title: "Захиалсан",
+      status: false,
+      ...getColumnSearchProps("Захиалсан"),
       sorter: (a, b) => handleSort(),
     },
+
     {
       dataIndex: "updateUser",
       key: "updateUser",
@@ -164,6 +285,7 @@ const Gallery = (props) => {
       ...getColumnSearchProps("updateUser"),
       sorter: (a, b) => handleSort(),
     },
+
     {
       dataIndex: "createAt",
       key: "createAt",
@@ -171,6 +293,7 @@ const Gallery = (props) => {
       status: true,
       sorter: (a, b) => handleSort(),
     },
+
     {
       dataIndex: "updateAt",
       key: "updateAt",
@@ -186,7 +309,7 @@ const Gallery = (props) => {
     if (selectedRowKeys.length != 1) {
       toastControl("error", "Нэг өгөгдөл сонгоно уу");
     } else {
-      history.push(`/gallery/edit/${selectedRowKeys[0]}`);
+      history.push(`/order/edit/${selectedRowKeys[0]}`);
     }
   };
 
@@ -251,7 +374,10 @@ const Gallery = (props) => {
         props.gallerys.map((el) => {
           const key = el._id;
           delete el._id;
-          el.status = el.status == true ? "Нийтлэгдсэн" : "Ноорог";
+          el.status = el.status == true ? "Идэвхтэй" : "Идэвхгүй";
+          el.paid = el.paid == true ? "Төлбөр төлөгдсөн" : "Төлбөр төлөгдөөгүй";
+          el.paidType = el.paidType == "qpay" ? "Qpay" : "Банкаар шилжүүлэх";
+          el.totalPrice = new Intl.NumberFormat().format(el.totalPrice);
           el.createUser = el.createUser && el.createUser.firstName;
           el.updateUser = el.updateUser && el.updateUser.firstName;
           el.createAt = moment(el.createAt)
@@ -503,37 +629,18 @@ const Gallery = (props) => {
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Зургийн сан" />
+        <PageTitle name="Захиалгууд" />
 
         <div className="content">
           <Loader show={loading.visible}> {loading.message}</Loader>
           <div className="container-fluid">
             <div className="card datatable-card">
               <div className="card-header">
-                <h3 className="card-title">Бүх зургууд</h3>
+                <h3 className="card-title">Бүх захиалга</h3>
               </div>
               <div className="card-body datatable-card-body">
                 <div className="datatable-header-tools">
-                  <div className="datatable-actions">
-                    <button
-                      className="datatable-action add-bg"
-                      onClick={() => history.push(`/gallery/add`)}
-                    >
-                      <i className="fa fa-plus"></i> Нэмэх
-                    </button>
-                    <button
-                      className="datatable-action edit-bg"
-                      onClick={() => handleEdit()}
-                    >
-                      <i className="fa fa-edit"></i> Засах
-                    </button>
-                    <button
-                      className="datatable-action delete-bg"
-                      onClick={() => showModal("delete")}
-                    >
-                      <i className="fa fa-trash"></i> Устгах
-                    </button>
-                  </div>
+                  <div className="datatable-actions"></div>
                   <div className="datatable-tools">
                     <Tooltip placement="left" title="Шинчлэх">
                       <button

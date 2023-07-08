@@ -688,10 +688,10 @@ const Page = (props) => {
               el.status && el.status == true ? "Нийтлэгдсэн" : "Ноорог";
           }
           if (col.key === "createUser" && col.status === true) {
-            el.createUser = el.createUser && el.createUser.firstName;
+            el.createUser = el.createUser && el.createUser.firstname;
           }
           if (col.key === "updateUser" && col.status === true) {
-            el.updateUser = el.updateUser && el.updateUser.firstName;
+            el.updateUser = el.updateUser && el.updateUser.firstname;
           }
           if (col.key === "menu" && col.status === true) {
             el.menu =

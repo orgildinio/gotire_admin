@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Switch, Upload, message, InputNumber } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  Switch,
+  Upload,
+  message,
+  InputNumber,
+} from "antd";
 import { connect } from "react-redux";
 import { Editor } from "@tinymce/tinymce-react";
 
@@ -169,7 +177,7 @@ const Add = (props) => {
             url: `${base.cdnUrl}${img}`,
           }))
         );
-      console.log(props.service.direct);
+
       setIsDirect(() => (props.service.direct == "false" ? false : true));
       setCheckedRadio((bc) => ({
         ...bc,
@@ -208,7 +216,10 @@ const Add = (props) => {
                             name="price"
                             rules={[requiredRule]}
                           >
-                            <InputNumber style={{width:"100%"}} placeholder="Үйлчилгээний үнэ оруулна уу" />
+                            <InputNumber
+                              style={{ width: "100%" }}
+                              placeholder="Үйлчилгээний үнэ оруулна уу"
+                            />
                           </Form.Item>
                         </div>
                         <div className="col-12">

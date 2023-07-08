@@ -28,7 +28,7 @@ const { Dragger } = Upload;
 
 const Add = (props) => {
   const [form] = Form.useForm();
-  const [cover, setCover] = useState({});
+
   const [logo, setLogo] = useState({});
   const [setProgress] = useState(0);
   const [loading, setLoading] = useState({
@@ -42,7 +42,6 @@ const Add = (props) => {
   const clear = () => {
     props.clear();
     form.resetFields();
-    setCover({});
     setLogo({});
     setLoading(false);
   };
@@ -56,8 +55,10 @@ const Add = (props) => {
   const handleAdd = (values, status = null) => {
     if (!values.status) values.status = true;
     if (status == "draft") values.status = false;
-    if (cover && cover.name) values.cover = cover.name;
     if (logo && logo.name) values.logo = logo.name;
+    else {
+      return toastControl("error", "Лого оруулна уу");
+    }
 
     const data = {
       ...values,
@@ -71,7 +72,6 @@ const Add = (props) => {
     let index;
 
     if (stType === "logo") setLogo({});
-    if (stType === "cover") setCover({});
 
     axios
       .delete("/imgupload", { data: { file: file.name } })
@@ -108,7 +108,6 @@ const Add = (props) => {
         url: `${base.cdnUrl}${res.data.data}`,
       };
       if (type === "logo") setLogo(img);
-      if (type === "cover") setCover(img);
 
       onSuccess("Ok");
       message.success(res.data.data + " Хуулагдлаа");
@@ -120,22 +119,12 @@ const Add = (props) => {
     }
   };
 
-  const uploadOptions = {
-    onRemove: (file) => handleRemove("cover", file),
-    fileList: cover && cover.name && [cover],
-    customRequest: (options) => uploadImage(options, "cover"),
-    accept: "image/*",
-    name: "cover",
-    listType: "picture",
-    maxCount: 1,
-  };
-
   const logoOptions = {
     onRemove: (file) => handleRemove("logo", file),
     fileList: logo && logo.name && [logo],
     customRequest: (options) => uploadImage(options, "logo"),
     accept: "image/*",
-    name: "cover",
+    name: "logo",
     listType: "picture",
     maxCount: 1,
   };
@@ -189,124 +178,6 @@ const Add = (props) => {
                             rules={[requiredRule]}
                           >
                             <Input placeholder="Холбоос линк оруулна уу" />
-                          </Form.Item>
-                        </div>
-
-                        <div className="col-12">
-                          <Form.Item
-                            label="Компаний мэдээлэл"
-                            name="companyInfo"
-                            getValueFromEvent={(e) =>
-                              e.target && e.target.getContent()
-                            }
-                            rules={[requiredRule]}
-                          >
-                            <Editor
-                              apiKey="2nubq7tdhudthiy6wfb88xgs36os4z3f4tbtscdayg10vo1o"
-                              init={{
-                                height: 300,
-                                menubar: false,
-                                plugins: [
-                                  "advlist autolink lists link image charmap print preview anchor tinydrive",
-                                  "searchreplace visualblocks code fullscreen",
-                                  "insertdatetime media table paste code help wordcount image media  code  table  ",
-                                ],
-                                toolbar:
-                                  "mybutton | addPdf | image | undo redo | fontselect fontsizeselect formatselect blockquote  | bold italic backcolor | \
-                        alignleft aligncenter alignright alignjustify | \
-                        bullist numlist outdent indent | removeformat | help | link image | quickbars | media | code | tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol",
-                                file_picker_types: "image",
-                                tinydrive_token_provider: `${base.apiUrl}users/jwt`,
-                                automatic_uploads: false,
-                                setup: (editor) => {
-                                  editor.ui.registry.addButton("mybutton", {
-                                    text: "Файл оруулах",
-                                    onAction: () => {
-                                      var input =
-                                        document.createElement("input");
-                                      input.setAttribute("type", "file");
-                                      input.onchange = async function () {
-                                        var file = this.files[0];
-                                        const fData = new FormData();
-                                        fData.append("file", file);
-                                        setLoading({
-                                          visible: true,
-                                          message:
-                                            "Түр хүлээнэ үү файл хуулж байна",
-                                        });
-                                        const res = await axios.post(
-                                          "/file",
-                                          fData
-                                        );
-                                        const url =
-                                          `${base.cdnUrl}` + res.data.data;
-                                        editor.insertContent(
-                                          `<a href="${url}"> ${res.data.data} </a>`
-                                        );
-                                        setLoading({
-                                          visible: false,
-                                        });
-                                      };
-                                      input.click();
-                                    },
-                                  });
-                                  editor.ui.registry.addButton("addPdf", {
-                                    text: "PDF Файл оруулах",
-                                    onAction: () => {
-                                      let input =
-                                        document.createElement("input");
-                                      input.setAttribute("type", "file");
-                                      input.setAttribute("accept", ".pdf");
-                                      input.onchange = async function () {
-                                        let file = this.files[0];
-                                        const fData = new FormData();
-                                        fData.append("file", file);
-                                        setLoading({
-                                          visible: true,
-                                          message:
-                                            "Түр хүлээнэ үү файл хуулж байна",
-                                        });
-                                        const res = await axios.post(
-                                          "/file",
-                                          fData
-                                        );
-                                        const url = base.cdnUrl + res.data.data;
-                                        editor.insertContent(
-                                          `<iframe src="${url}" style="width:100%; min-height: 500px"> </iframe>`
-                                        );
-                                        setLoading({
-                                          visible: false,
-                                        });
-                                      };
-                                      input.click();
-                                    },
-                                  });
-                                },
-                                file_picker_callback: function (
-                                  cb,
-                                  value,
-                                  meta
-                                ) {
-                                  var input = document.createElement("input");
-                                  input.setAttribute("type", "file");
-                                  input.setAttribute("accept", "image/*");
-                                  input.onchange = async function () {
-                                    var file = this.files[0];
-                                    const fData = new FormData();
-                                    fData.append("file", file);
-                                    const res = await axios.post(
-                                      "/imgupload",
-                                      fData
-                                    );
-                                    const url =
-                                      `${base.cdnUrl}` + res.data.data;
-                                    cb(url);
-                                  };
-                                  input.click();
-                                },
-                              }}
-                              onEditorChange={(event) => handleChange(event)}
-                            />
                           </Form.Item>
                         </div>
                       </div>
@@ -375,27 +246,6 @@ const Add = (props) => {
                     </div>
                   </div>
 
-                  <div className="card">
-                    <div class="card-header">
-                      <h3 class="card-title">Cover зураг оруулах</h3>
-                    </div>
-                    <div className="card-body">
-                      <Dragger
-                        {...uploadOptions}
-                        className="upload-list-inline"
-                      >
-                        <p className="ant-upload-drag-icon">
-                          <InboxOutlined />
-                        </p>
-                        <p className="ant-upload-text">
-                          Зургаа энэ хэсэг рүү чирч оруулна уу
-                        </p>
-                        <p className="ant-upload-hint">
-                          Нэг болон түүнээс дээш файл хуулах боломжтой
-                        </p>
-                      </Dragger>
-                    </div>
-                  </div>
                   <div className="card">
                     <div class="card-header">
                       <h3 class="card-title">Лого оруулах</h3>

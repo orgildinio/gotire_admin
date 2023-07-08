@@ -249,53 +249,6 @@ const Add = (props) => {
                   <div className="card card-primary">
                     <div className="card-body">
                       <div className="row">
-                        <div className="col-6">
-                          <Form.Item label="Төрөл" name="type">
-                            <Select
-                              options={types}
-                              placeholder="Төрлөөс сонгоно уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-6">
-                          <Form.Item
-                            name="fullName"
-                            label="Санал хүсэлт илгээсэн"
-                          >
-                            <Input placeholder="Санал хүсэлт илгээсэн хувь хүн эсвэл ААН - ын нэр" />
-                          </Form.Item>
-                        </div>
-                        <div className="col-6">
-                          <Form.Item name="phone" label="Утасны дугаар">
-                            <InputNumber
-                              placeholder="Холбоо барих утасны дугаарыг оруулна уу"
-                              style={{ width: "100%" }}
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-6">
-                          <Form.Item
-                            name="email"
-                            label="Имэйл хагя"
-                            rules={[
-                              {
-                                type: "email",
-                                message: "Имэйл хаяг буруу байна!",
-                              },
-                            ]}
-                          >
-                            <Input placeholder="Имэйл хаягыг оруулна уу" />
-                          </Form.Item>
-                        </div>
-                        <div className="col-12">
-                          <Form.Item
-                            label="Гарчиг"
-                            name="name"
-                            rules={[requiredRule]}
-                          >
-                            <Input placeholder="Асуулт хариултын гарчиг оруулна уу" />
-                          </Form.Item>
-                        </div>
                         <div className="col-12">
                           <Form.Item
                             label="Асуулт"
@@ -377,77 +330,6 @@ const Add = (props) => {
                           Буцах
                         </Button>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <div class="card-header">
-                      <h3 class="card-title">Түлхүүр үгс</h3>
-                    </div>
-                    <div className="card-body">
-                      <>
-                        {tags.map((tag, index) => {
-                          if (editInputIndex === index) {
-                            return (
-                              <Input
-                                ref={editInputRef}
-                                key={tag}
-                                size="small"
-                                className="tag-input"
-                                value={editInputValue}
-                                onChange={handleEditInputChange}
-                                onBlur={handleEditInputConfirm}
-                                onPressEnter={handleEditInputConfirm}
-                              />
-                            );
-                          }
-                          const isLongTag = tag.length > 20;
-                          const tagElem = (
-                            <Tag
-                              className="edit-tag"
-                              key={tag}
-                              closable={index !== 0}
-                              onClose={() => handleClose(tag)}
-                            >
-                              <span
-                                onDoubleClick={(e) => {
-                                  if (index !== 0) {
-                                    setEditInputIndex(index);
-                                    setEditInputValue(tag);
-                                    e.preventDefault();
-                                  }
-                                }}
-                              >
-                                {isLongTag ? `${tag.slice(0, 20)}...` : tag}
-                              </span>
-                            </Tag>
-                          );
-                          return isLongTag ? (
-                            <Tooltip title={tag} key={tag}>
-                              {tagElem}
-                            </Tooltip>
-                          ) : (
-                            tagElem
-                          );
-                        })}
-                        {inputVisible && (
-                          <Input
-                            ref={inputRef}
-                            type="text"
-                            size="small"
-                            className="tag-input"
-                            value={inputValue}
-                            onChange={handleInputChange}
-                            onBlur={handleInputConfirm}
-                            onPressEnter={handleInputConfirm}
-                          />
-                        )}
-                        {!inputVisible && (
-                          <Tag className="site-tag-plus" onClick={showInput}>
-                            <PlusOutlined /> Түлхүүр үг нэмэх
-                          </Tag>
-                        )}
-                      </>
                     </div>
                   </div>
                 </div>

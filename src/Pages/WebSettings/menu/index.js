@@ -18,10 +18,6 @@ const subItems = [
     label: "Баннер",
     key: "/web_settings/banners",
   },
-  {
-    label: "Сурталчилгааны баннер",
-    key: "/web_settings/adsbanners",
-  },
 ];
 
 const Index = () => {

@@ -9,6 +9,8 @@ import {
   Space,
   Radio,
   message,
+  InputNumber,
+  AutoComplete,
 } from "antd";
 import { connect } from "react-redux";
 import { Editor } from "@tinymce/tinymce-react";
@@ -19,12 +21,7 @@ import { InboxOutlined } from "@ant-design/icons";
 import Loader from "../../../Components/Generals/Loader";
 
 //Actions
-import { tinymceAddPhoto } from "../../../redux/actions/imageActions";
-import {
-  loadNewsCategories,
-  clear as clearCat,
-} from "../../../redux/actions/newsCategoryActions";
-import * as actions from "../../../redux/actions/newsActions";
+import * as actions from "../../../redux/actions/wheelActions";
 
 // Lib
 import base from "../../../base";
@@ -40,97 +37,45 @@ const requiredRule = {
 
 const { Dragger } = Upload;
 
-const Edit = (props) => {
+const Add = (props) => {
   const [form] = Form.useForm();
   const [pictures, setPictures] = useState([]);
-  const [audios, setAudios] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [type, setType] = useState("default");
-  const [expandedKeys, setExpandedKeys] = useState([]);
-  const [checkedKeys, setCheckedKeys] = useState([]);
-  const [checkedRadio, setCheckedRadio] = useState({
-    status: true,
-    star: false,
-  });
-  const [selectedKeys, setSelectedKeys] = useState([]);
-  const [autoExpandParent, setAutoExpandParent] = useState(true);
-  const [gData, setGData] = useState([]);
-  const [deleteFiles, setDeleteFiles] = useState([]);
   const [setProgress] = useState(0);
+  const [deleteFiles, setDeleteFiles] = useState([]);
+  const [autoComplete, setAutoComplete] = useState(null);
   const [loading, setLoading] = useState({
     visible: false,
     message: "",
   });
 
-  // -- MODAL STATE
+  const [checkedRadio, setCheckedRadio] = useState({
+    status: true,
+    star: false,
+    isDiscount: false,
+  });
 
   // FUNCTIONS
   const init = () => {
-    props.getNews(props.match.params.id);
-    props.loadNewsCategories();
+    props.getWheel(props.match.params.id);
   };
 
   const clear = () => {
     props.clear();
-    props.clearCat();
     form.resetFields();
     setPictures([]);
-    setAudios([]);
-    setVideos([]);
-    setType("default");
-    setExpandedKeys([]);
-    setSelectedKeys([]);
-    setCheckedKeys([]);
-    setGData([]);
     setLoading(false);
-  };
-
-  // -- TREE FUNCTIONS
-  const onExpand = (expandedKeysValue) => {
-    setExpandedKeys(expandedKeysValue);
-    setAutoExpandParent(false);
-  };
-
-  const onCheck = (checkedKeysValue) => {
-    // console.log(checkedKeysValue);
-    setCheckedKeys(checkedKeysValue);
-  };
-
-  const handleRadio = (value, type) => {
-    setCheckedRadio((bc) => ({ ...bc, [type]: value }));
-  };
-
-  const onSelect = (selectedKeysValue, info) => {
-    // console.log("onSelect", info);
-    setSelectedKeys(selectedKeysValue);
   };
 
   const handleChange = (event) => {
     form.setFieldsValue({ details: event });
   };
 
-  const onChangeType = (e) => {
-    setType(e.target.value);
-  };
-
   const handleEdit = (values, status = null) => {
-    const type = values.type || "default";
-
-    switch (type) {
-      case "video": {
-        values.videos = videos.map((el) => el.name);
-        break;
-      }
-      case "audio": {
-        values.audios = audios.map((el) => el.name);
-        break;
-      }
-      case "default": {
-        break;
-      }
+    if (pictures.length > 0) {
+      values.pictures = pictures.map((el) => el.name);
+    } else {
+      values.pictures = [];
     }
-    if (pictures.length > 0) values.pictures = pictures.map((el) => el.name);
-    else values.pictures = [];
 
     if (deleteFiles && deleteFiles.length > 0) {
       deleteFiles.map(async (deleteFile) => {
@@ -141,108 +86,25 @@ const Edit = (props) => {
     const data = {
       ...values,
       star: values.star || false,
-      type,
-      categories: [...checkedKeys],
+      isDiscount: values.isDiscount || false,
     };
-    if (data.categories.length === 0) {
-      delete data.categories;
-    }
 
-    if (status === "draft") {
-      data.status = false;
-    }
-
+    if (status === "draft") data.status = false;
     const sendData = convertFromdata(data);
-    props.updateNews(props.match.params.id, sendData);
-  };
-
-  const setFunction = (stType, sData) => {
-    switch (stType) {
-      case "audios":
-        setAudios((ba) => [...ba, sData]);
-        break;
-      case "pictures":
-        setPictures((bp) => [...bp, sData]);
-        break;
-      case "videos":
-        setVideos((bv) => [...bv, sData]);
-        break;
-      default:
-        break;
-    }
+    props.updateWheel(props.match.params.id, sendData);
   };
 
   const handleRemove = (stType, file) => {
-    let index;
-    let deleteFile;
-    let list;
+    let index = pictures.indexOf(file);
+    let deleteFile = pictures[index].name;
+    let list = pictures.slice();
+    list.splice(index, 1);
+    setPictures(list);
 
-    switch (stType) {
-      case "audios":
-        index = audios.indexOf(file);
-        deleteFile = audios[index].name;
-        list = audios.slice();
-        list.splice(index, 1);
-        setAudios(list);
-        break;
-      case "pictures":
-        index = pictures.indexOf(file);
-        deleteFile = pictures[index].name;
-        list = pictures.slice();
-        list.splice(index, 1);
-        setPictures(list);
-        break;
-      case "videos":
-        index = videos.indexOf(file);
-        deleteFile = videos[index].name;
-        list = videos.slice();
-        list.splice(index, 1);
-        setVideos(list);
-        break;
-      default:
-        index = pictures.indexOf(list);
-        deleteFile = pictures[index].name;
-        list = pictures.slice();
-        list.splice(index, 1);
-        setPictures(list);
-        break;
-    }
     setDeleteFiles((bf) => [...bf, deleteFile]);
   };
 
   // CONFIGS
-
-  const uploadFile = async (options, stType) => {
-    const { onSuccess, onError, file, onProgress } = options;
-    const fmData = new FormData();
-    const config = {
-      headers: { "content-type": "multipart/form-data" },
-      onUploadProgress: (event) => {
-        const percent = Math.floor((event.loaded / event.total) * 100);
-        setProgress(percent);
-        if (percent === 100) {
-          setTimeout(() => setProgress(0), 1000);
-        }
-        onProgress({ percent: (event.loaded / event.total) * 100 });
-      },
-    };
-    fmData.append("file", file);
-    try {
-      setLoading({ visible: true, message: "Түр хүлээнэ үү файл хуулж байна" });
-      const res = await axios.post("/imgupload/file", fmData, config);
-      const data = {
-        name: res.data.data,
-        status: "done",
-      };
-      setFunction(stType, data);
-      onSuccess("Ok");
-      message.success(res.data.data + " Хуулагдлаа");
-      setLoading({ visible: false, message: "" });
-    } catch (error) {
-      toastControl("error", error);
-      onError({ error });
-    }
-  };
 
   const uploadImage = async (options) => {
     const { onSuccess, onError, file, onProgress } = options;
@@ -260,6 +122,7 @@ const Edit = (props) => {
     };
 
     fmData.append("file", file);
+
     try {
       const res = await axios.post("/imgupload", fmData, config);
       const img = {
@@ -287,76 +150,43 @@ const Edit = (props) => {
     listType: "picture",
   };
 
-  const videoUploadOptions = {
-    onRemove: (file) => handleRemove("videos", file),
-    customRequest: (options) => uploadFile(options, "videos"),
-    fileList: [...videos],
-    accept: "video/*",
-    name: "video",
-    multiple: true,
-  };
-
-  const audioUploadOptions = {
-    onRemove: (file) => handleRemove("audios", file),
-    customRequest: (options) => uploadFile(options, "audios"),
-    fileList: [...audios],
-    accept: "audio/*",
-    name: "audio",
-    multiple: true,
-  };
-
   // USEEFFECT
   useEffect(() => {
+    const fetchData = async () => {
+      const result = await axios.get("/wheels/groups");
+      if (result && result.data) {
+        setAutoComplete(() => ({ ...result.data }));
+      } else if (result && result.error) {
+        toastControl("error", result.error);
+      }
+    };
+
+    fetchData().catch((err) => console.log(err));
     init();
+
     return () => clear();
   }, []);
 
   useEffect(() => {
-    if (props.news) {
-      form.setFieldsValue({ ...props.news });
-      setCheckedRadio(() => ({
-        star: props.news.star,
-        status: props.news.status,
-      }));
-      props.news.audios &&
-        props.news.audios.length > 0 &&
-        setAudios(props.news.audios.map((audio) => ({ name: audio })));
+    if (props.wheel) {
+      form.setFieldsValue({ ...props.wheel });
 
-      if (props.news.videos && props.news.videos.length > 0) {
-        setVideos(props.news.videos.map((video) => ({ name: video })));
-      } else {
-        setVideos(() => []);
-      }
+      setCheckedRadio({
+        status: props.wheel.status,
+        star: props.wheel.star,
+        isDiscount: props.wheel.isDiscount,
+      });
 
-      if (props.news.pictures && props.news.pictures.length > 0) {
+      props.wheel.pictures &&
+        props.wheel.pictures.length > 0 &&
         setPictures(
-          props.news.pictures.map((img) => ({
+          props.wheel.pictures.map((img) => ({
             name: img,
             url: `${base.cdnUrl}${img}`,
           }))
         );
-      } else {
-        setPictures(() => []);
-      }
-
-      if (props.news.categories && props.news.categories.length > 0) {
-        setCheckedKeys(() => {
-          return props.news.categories.map((cat) => cat._id);
-        });
-      }
-
-      setType(props.news.type);
     }
-  }, [props.news]);
-
-  useEffect(() => {
-    const data = menuGenerateData(props.categories);
-    setGData(data);
-  }, [props.categories]);
-
-  useEffect(() => {
-    setLoading({ visible: props.loading, message: "Түр хүлээнэ үү" });
-  }, [props.loading]);
+  }, [props.wheel]);
 
   // Ямар нэгэн алдаа эсвэл амжилттай үйлдэл хийгдвэл энд useEffect барьж аваад TOAST харуулна
   useEffect(() => {
@@ -365,18 +195,15 @@ const Edit = (props) => {
 
   useEffect(() => {
     if (props.success) {
-      clear();
-      toastControl("success", "Амжилттай засагдлаа");
-      setTimeout(() => {
-        props.history.replace("/news");
-      }, 1000);
+      toastControl("success", props.success);
+      setTimeout(() => props.history.replace("/wheel"), 2000);
     }
   }, [props.success]);
 
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Нийтлэл засварлах" />
+        <PageTitle name="Обуд шинэчлэх" />
         <div className="page-sub-menu"></div>
         <div className="content">
           <Loader show={loading.visible}> {loading.message} </Loader>
@@ -389,17 +216,173 @@ const Edit = (props) => {
                       <div className="row">
                         <div className="col-12">
                           <Form.Item
-                            label="Мэдээний гарчиг"
+                            label="Обудын гарчиг"
                             name="name"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <Input placeholder="Мэдээний гарчиг оруулна уу" />
+                            <Input placeholder="Обудын гарчиг оруулна уу" />
                           </Form.Item>
                         </div>
                         <div className="col-12">
                           <Form.Item
-                            label="Мэдээний дэлгэрэнгүй"
+                            label="Багц"
+                            name="setOf"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <Input placeholder="Багцална уу" />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12">
+                          <Form.Item
+                            label="Үнэ"
+                            name="price"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <Input placeholder="Үнэ оруулна уу" />
+                          </Form.Item>
+                        </div>
+                        {checkedRadio.isDiscount == true && (
+                          <div className="col-12">
+                            <Form.Item
+                              label="Хөнгөлөлтэй үнэ"
+                              name="discount"
+                              rules={[requiredRule]}
+                              hasFeedback
+                            >
+                              <Input placeholder="Хөнгөлөлтэй үнэ оруулна уу" />
+                            </Form.Item>
+                          </div>
+                        )}
+                        <div className="col-4">
+                          <Form.Item
+                            label="Диаметр"
+                            name="diameter"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <AutoComplete
+                              style={{ width: "100%" }}
+                              options={
+                                autoComplete &&
+                                autoComplete["diameter"] &&
+                                autoComplete["diameter"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Диаметрын хэмжээг оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Өндрийг оруулна уу"
+                            name="height"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <AutoComplete
+                              style={{ width: "100%" }}
+                              options={
+                                autoComplete &&
+                                autoComplete["height"] &&
+                                autoComplete["height"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Өндрийг оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Болтны хоорондын зайны хэмжээ"
+                            name="boltPattern"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <AutoComplete
+                              options={
+                                autoComplete &&
+                                autoComplete["boltPattern"] &&
+                                autoComplete["boltPattern"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Болтны хоорондын зайны  хэмжээг оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Rim хэмжээ"
+                            name="rim"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <AutoComplete
+                              options={
+                                autoComplete &&
+                                autoComplete["rim"] &&
+                                autoComplete["rim"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Rim хэмжээг оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Дотогшоо суултын хэмжээ"
+                            name="inSet"
+                            hasFeedback
+                          >
+                            <Input placeholder="Дотогшоо суултын хэмжээг оруулна уу" />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Гадагшаа offset хэмжээ"
+                            name="offSet"
+                            hasFeedback
+                          >
+                            <Input placeholder="Гадагшаа offset хэмжээг оруулна уу" />
+                          </Form.Item>
+                        </div>
+
+                        <div className="col-4">
+                          <Form.Item
+                            label="Болтны нүхний хэмжээ"
+                            name="threadSize"
+                            hasFeedback
+                          >
+                            <AutoComplete
+                              options={
+                                autoComplete &&
+                                autoComplete["threadSize"] &&
+                                autoComplete["threadSize"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Болтны нүхний хэмжээг оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Обудын голын диаметрын хэмжээ"
+                            name="centerBore"
+                            hasFeedback
+                          >
+                            <Input placeholder="Обудын голын диаметрын хэмжээг оруулна уу" />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12">
+                          <Form.Item
+                            label="Дэлгэрэнгүй"
                             name="details"
                             getValueFromEvent={(e) =>
                               e.target && e.target.getContent()
@@ -412,16 +395,16 @@ const Edit = (props) => {
                                 height: 300,
                                 menubar: false,
                                 plugins: [
-                                  "advlist autolink lists link image  tinydrive charmap print preview anchor",
+                                  "advlist textcolor autolink lists link image charmap print preview anchor tinydrive ",
                                   "searchreplace visualblocks code fullscreen",
                                   "insertdatetime media table paste code help wordcount image media  code  table  ",
                                 ],
                                 toolbar:
-                                  "mybutton image | undo redo | fontselect fontsizeselect formatselect blockquote  | bold italic backcolor | \
+                                  "mybutton | addPdf |  image | undo redo | fontselect fontsizeselect formatselect blockquote  | bold italic forecolor  backcolor | \
                         alignleft aligncenter alignright alignjustify | \
                         bullist numlist outdent indent | removeformat | help | link  | quickbars | media | code | tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol",
-                                tinydrive_token_provider: `${base.apiUrl}users/jwt`,
                                 file_picker_types: "image",
+                                tinydrive_token_provider: `${base.apiUrl}users/jwt`,
                                 automatic_uploads: false,
                                 setup: (editor) => {
                                   editor.ui.registry.addButton("mybutton", {
@@ -447,6 +430,37 @@ const Edit = (props) => {
                                           `${base.cdnUrl}` + res.data.data;
                                         editor.insertContent(
                                           `<a href="${url}"> ${res.data.data} </a>`
+                                        );
+                                        setLoading({
+                                          visible: false,
+                                        });
+                                      };
+                                      input.click();
+                                    },
+                                  });
+                                  editor.ui.registry.addButton("addPdf", {
+                                    text: "PDF Файл оруулах",
+                                    onAction: () => {
+                                      let input =
+                                        document.createElement("input");
+                                      input.setAttribute("type", "file");
+                                      input.setAttribute("accept", ".pdf");
+                                      input.onchange = async function () {
+                                        let file = this.files[0];
+                                        const fData = new FormData();
+                                        fData.append("file", file);
+                                        setLoading({
+                                          visible: true,
+                                          message:
+                                            "Түр хүлээнэ үү файл хуулж байна",
+                                        });
+                                        const res = await axios.post(
+                                          "/file",
+                                          fData
+                                        );
+                                        const url = base.cdnUrl + res.data.data;
+                                        editor.insertContent(
+                                          `<iframe src="${url}" style="width:100%; min-height: 500px"> </iframe>`
                                         );
                                         setLoading({
                                           visible: false,
@@ -486,81 +500,6 @@ const Edit = (props) => {
                       </div>
                     </div>
                   </div>
-                  <div className="row">
-                    <div className="col-6">
-                      <div className="card">
-                        <div class="card-header">
-                          <h3 class="card-title">Зураг оруулах</h3>
-                        </div>
-                        <div className="card-body">
-                          <Dragger
-                            {...uploadOptions}
-                            className="upload-list-inline"
-                          >
-                            <p className="ant-upload-drag-icon">
-                              <InboxOutlined />
-                            </p>
-                            <p className="ant-upload-text">
-                              Зургаа энэ хэсэг рүү чирч оруулна уу
-                            </p>
-                            <p className="ant-upload-hint">
-                              Нэг болон түүнээс дээш файл хуулах боломжтой
-                            </p>
-                          </Dragger>
-                        </div>
-                      </div>
-                    </div>
-                    {type === "video" && (
-                      <div className="col-6">
-                        <div className="card">
-                          <div class="card-header">
-                            <h3 class="card-title">Видео оруулах</h3>
-                          </div>
-                          <div className="card-body">
-                            <Dragger
-                              {...videoUploadOptions}
-                              className="upload-list-inline"
-                            >
-                              <p className="ant-upload-drag-icon">
-                                <InboxOutlined />
-                              </p>
-                              <p className="ant-upload-text">
-                                Видеогоо энэ хэсэг рүү чирч оруулна уу
-                              </p>
-                              <p className="ant-upload-hint">
-                                Нэг болон түүнээс дээш файл хуулах боломжтой
-                              </p>
-                            </Dragger>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {type === "audio" && (
-                      <div className="col-6">
-                        <div className="card">
-                          <div class="card-header">
-                            <h3 class="card-title">Аудио оруулах</h3>
-                          </div>
-                          <div className="card-body">
-                            <Dragger
-                              {...audioUploadOptions}
-                              className="upload-list-inline"
-                            >
-                              <p className="ant-upload-drag-icon">
-                                <InboxOutlined />
-                              </p>
-                              <p className="ant-upload-text">
-                                Аудиогоо энэ хэсэг рүү чирч оруулна уу
-                              </p>
-                              <p className="ant-upload-hint">
-                                Нэг болон түүнээс дээш файл хуулах боломжтой
-                              </p>
-                            </Dragger>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
                 <div className="col-4">
                   <div className="card">
@@ -569,26 +508,46 @@ const Edit = (props) => {
                     </div>
                     <div className="card-body">
                       <div className="row">
-                        <div className="col-6">
-                          <Form.Item label="Идэвхтэй эсэх" name="status">
+                        <div className="col-12">
+                          <Form.Item label="Зарсан эсэх" name="status">
                             <Switch
-                              checkedChildren="Идэвхтэй"
-                              unCheckedChildren="Идэвхгүй"
                               size="medium"
+                              checkedChildren="Зарагдаагүй"
+                              unCheckedChildren="Зарагдсан"
                               checked={checkedRadio.status}
                               onChange={(checked) =>
-                                handleRadio(checked, "status")
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  status: checked,
+                                }))
                               }
                             />
                           </Form.Item>
                         </div>
-                        <div className="col-6">
+                        <div className="col-12">
                           <Form.Item label="Онцлох" name="star">
                             <Switch
                               size="medium"
                               checked={checkedRadio.star}
                               onChange={(checked) =>
-                                handleRadio(checked, "star")
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  star: checked,
+                                }))
+                              }
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12">
+                          <Form.Item label="Хямдрал зарлах" name="isDiscount">
+                            <Switch
+                              size="medium"
+                              checked={checkedRadio.isDiscount}
+                              onChange={(checked) =>
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  isDiscount: checked,
+                                }))
                               }
                             />
                           </Form.Item>
@@ -613,7 +572,7 @@ const Edit = (props) => {
                               });
                           }}
                         >
-                          Шинэчлэх
+                          Хадгалах
                         </Button>
                         <Button
                           key="draft"
@@ -629,7 +588,7 @@ const Edit = (props) => {
                               });
                           }}
                         >
-                          Ноороглох
+                          Зарагдсан
                         </Button>
                         <Button onClick={() => props.history.goBack()}>
                           Буцах
@@ -639,45 +598,23 @@ const Edit = (props) => {
                   </div>
                   <div className="card">
                     <div class="card-header">
-                      <h3 class="card-title">ТӨРӨЛ</h3>
+                      <h3 class="card-title">Зураг оруулах</h3>
                     </div>
                     <div className="card-body">
-                      <div className="row">
-                        <div className="col-12">
-                          <Form.Item name="type" value={type}>
-                            <Radio.Group
-                              defaultValue={type}
-                              onChange={onChangeType}
-                            >
-                              <Space direction="vertical">
-                                <Radio value={"default"}>Үндсэн</Radio>
-                                <Radio value={"audio"}>Аудио</Radio>
-                                <Radio value={"video"}>Видео</Radio>
-                              </Space>
-                            </Radio.Group>
-                          </Form.Item>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="card">
-                    <div class="card-header">
-                      <h3 class="card-title">АНГИЛАЛ</h3>
-                    </div>
-                    <div className="card-body">
-                      <Form.Item name="categories">
-                        <Tree
-                          checkable
-                          onExpand={onExpand}
-                          expandedKeys={expandedKeys}
-                          autoExpandParent={autoExpandParent}
-                          onCheck={onCheck}
-                          checkedKeys={checkedKeys}
-                          onSelect={onSelect}
-                          selectedKeys={selectedKeys}
-                          treeData={gData}
-                        />
-                      </Form.Item>
+                      <Dragger
+                        {...uploadOptions}
+                        className="upload-list-inline"
+                      >
+                        <p className="ant-upload-drag-icon">
+                          <InboxOutlined />
+                        </p>
+                        <p className="ant-upload-text">
+                          Зургаа энэ хэсэг рүү чирч оруулна уу
+                        </p>
+                        <p className="ant-upload-hint">
+                          Нэг болон түүнээс дээш файл хуулах боломжтой
+                        </p>
+                      </Dragger>
                     </div>
                   </div>
                 </div>
@@ -692,23 +629,19 @@ const Edit = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    categories: state.newsCategoryReducer.categories,
-    success: state.newsReducer.success,
-    error: state.newsReducer.error,
-    loading: state.newsReducer.loading,
-    news: state.newsReducer.news,
+    success: state.wheelReducer.success,
+    error: state.wheelReducer.error,
+    loading: state.wheelReducer.loading,
+    wheel: state.wheelReducer.wheel,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    tinymceAddPhoto: (file) => dispatch(tinymceAddPhoto(file)),
-    loadNewsCategories: () => dispatch(loadNewsCategories()),
-    updateNews: (id, data) => dispatch(actions.updateNews(id, data)),
-    getNews: (id) => dispatch(actions.getNews(id)),
+    updateWheel: (id, data) => dispatch(actions.updateWheel(id, data)),
+    getWheel: (id) => dispatch(actions.getWheel(id)),
     clear: () => dispatch(actions.clear()),
-    clearCat: () => dispatch(clearCat()),
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Edit);
+export default connect(mapStateToProps, mapDispatchToProps)(Add);

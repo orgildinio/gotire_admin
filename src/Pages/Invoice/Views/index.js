@@ -149,39 +149,6 @@ const View = (props) => {
             <Form layout="vertical" form={form}>
               <div className="row">
                 <div className="col-8">
-                  {props.invoice.course && (
-                    <div className="card card-primary">
-                      <div className="card-body">
-                        <div className="choise-service">
-                          <div className="choise-img">
-                            <img
-                              src={
-                                base.cdnUrl +
-                                "/150x150/" +
-                                props.invoice.course.pictures[0]
-                              }
-                            />
-                          </div>
-                          <div className="choise-service-detials">
-                            <div className="choise-title">
-                              <span>
-                                {" "}
-                                Сургалт / {props.invoice.course.type}{" "}
-                              </span>
-                              <h5>{props.invoice.course.name}</h5>
-                            </div>
-
-                            <p className="choise-service-price">
-                              {new Intl.NumberFormat().format(
-                                props.invoice.course.price
-                              )}
-                              ₮
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   <div className="page_detials_sub">
                     <h4>Захиалга өгсөн</h4>
                   </div>

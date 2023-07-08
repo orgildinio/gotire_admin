@@ -448,33 +448,24 @@ const SiteFooterMenu = (props) => {
                       label: "Мэдээ мэдээлэл",
                     },
                     {
-                      value: "announce",
-                      label: "Зарлал",
+                      value: "wheels",
+                      label: "Обуд",
                     },
                     {
-                      value: "platforms",
-                      label: "Платформ",
+                      value: "tires",
+                      label: "Дугуй",
                     },
+
+                    {
+                      value: "faqs",
+                      label: "Түгээмэл асуулт",
+                    },
+
                     {
                       value: "services",
                       label: "Үйлчилгээ",
                     },
-                    {
-                      value: "costs",
-                      label: "Үнийн мэдээлэл",
-                    },
-                    {
-                      value: "partners",
-                      label: "Хамтрагчид",
-                    },
-                    {
-                      value: "faq",
-                      label: "Түгээмэл асуулт",
-                    },
-                    {
-                      value: "gallerys",
-                      label: "Зургийн цомог",
-                    },
+
                     {
                       value: "contacts",
                       label: "Холбоо барих",
