@@ -438,6 +438,19 @@ const Add = (props) => {
                         </div>
                         <div className="col-12">
                           <Form.Item
+                            label="Хүргэлтийн мэдээлэл"
+                            name="delivery"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <Input
+                              style={{ width: "100%" }}
+                              placeholder="Хүргэлт байгаа эсэх эсвэл хүргэлт хүрэгдэх хугацаа"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12">
+                          <Form.Item
                             label="Дэлгэрэнгүй"
                             name="details"
                             getValueFromEvent={(e) =>

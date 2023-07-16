@@ -222,11 +222,11 @@ const Wheel = (props) => {
       sorter: (a, b) => handleSort(),
     },
     {
-      dataIndex: "height",
-      key: "height",
-      title: "Өндөр",
+      dataIndex: "width",
+      key: "width",
+      title: "Өргөн",
       status: true,
-      ...getColumnSearchProps("height"),
+      ...getColumnSearchProps("width"),
       sorter: (a, b) => handleSort(),
     },
     {

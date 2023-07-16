@@ -278,8 +278,8 @@ const Add = (props) => {
                         </div>
                         <div className="col-4">
                           <Form.Item
-                            label="Өндрийг оруулна уу"
-                            name="height"
+                            label="Өргөн JJ оруулна уу"
+                            name="width"
                             rules={[requiredRule]}
                             hasFeedback
                           >
@@ -287,8 +287,8 @@ const Add = (props) => {
                               style={{ width: "100%" }}
                               options={
                                 autoComplete &&
-                                autoComplete["height"] &&
-                                autoComplete["height"].map((el) => ({
+                                autoComplete["width"] &&
+                                autoComplete["width"].map((el) => ({
                                   value: el.name,
                                 }))
                               }
@@ -392,7 +392,7 @@ const Add = (props) => {
                             <Editor
                               apiKey="2nubq7tdhudthiy6wfb88xgs36os4z3f4tbtscdayg10vo1o"
                               init={{
-                                height: 300,
+                                width: 300,
                                 menubar: false,
                                 plugins: [
                                   "advlist textcolor autolink lists link image charmap print preview anchor tinydrive ",
@@ -460,7 +460,7 @@ const Add = (props) => {
                                         );
                                         const url = base.cdnUrl + res.data.data;
                                         editor.insertContent(
-                                          `<iframe src="${url}" style="width:100%; min-height: 500px"> </iframe>`
+                                          `<iframe src="${url}" style="width:100%; min-width: 500px"> </iframe>`
                                         );
                                         setLoading({
                                           visible: false,

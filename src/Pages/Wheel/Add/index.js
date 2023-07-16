@@ -251,8 +251,8 @@ const Add = (props) => {
                         </div>
                         <div className="col-4">
                           <Form.Item
-                            label="Өндрийг оруулна уу"
-                            name="height"
+                            label="Өргөн jj оруулна уу"
+                            name="width"
                             rules={[requiredRule]}
                             hasFeedback
                           >
@@ -260,8 +260,8 @@ const Add = (props) => {
                               style={{ width: "100%" }}
                               options={
                                 autoComplete &&
-                                autoComplete["height"] &&
-                                autoComplete["height"].map((el) => ({
+                                autoComplete["width"] &&
+                                autoComplete["width"].map((el) => ({
                                   value: el.name,
                                 }))
                               }
@@ -363,9 +363,10 @@ const Add = (props) => {
                             rules={[requiredRule]}
                           >
                             <Editor
+                              style={{ width: "100%" }}
                               apiKey="2nubq7tdhudthiy6wfb88xgs36os4z3f4tbtscdayg10vo1o"
                               init={{
-                                height: 300,
+                                width: 300,
                                 menubar: false,
                                 plugins: [
                                   "advlist textcolor autolink lists link image charmap print preview anchor tinydrive ",
