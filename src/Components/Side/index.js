@@ -99,6 +99,22 @@ const Side = (props) => {
               </NavLink>
             </li>
             <li className="nav-item">
+              <NavLink to="/set" className="nav-link" activeClassName="active">
+                <i className="nav-icon fa fa-car" />
+                <p>Дугуй, Обуд</p>
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink
+                to="/product"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <i className="nav-icon fa fa-car" />
+                <p>Бусад сэлбэгүүд</p>
+              </NavLink>
+            </li>
+            <li className="nav-item">
               <NavLink
                 to="/order"
                 className="nav-link"

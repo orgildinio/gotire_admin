@@ -7,20 +7,12 @@ import { usePathname } from "../../../hooks/use-url";
 //Sub menu init data
 const subItems = [
   {
-    label: "Дугуй",
-    key: "/tire",
-  },
-  {
-    label: "Үйлдвэрлэгч",
-    key: "/tire/make",
-  },
-  {
-    label: "Загвар",
-    key: "/tire/modal",
+    label: "Обуд дугуй",
+    key: "/set",
   },
   {
     label: "Ангилал",
-    key: "/tire/categories",
+    key: "/set/categories",
   },
 ];
 

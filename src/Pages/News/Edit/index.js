@@ -144,8 +144,9 @@ const Edit = (props) => {
       type,
       categories: [...checkedKeys],
     };
+
     if (data.categories.length === 0) {
-      delete data.categories;
+      data.categories = [];
     }
 
     if (status === "draft") {

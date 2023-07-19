@@ -159,6 +159,23 @@ const Tire = (props) => {
       sorter: (a, b) => handleSort(),
     },
     {
+      dataIndex: "tireCategories",
+      key: "tireCategories",
+      title: "Ангилал",
+      status: true,
+      filters:
+        props.tireCategories &&
+        props.tireCategories.map((cat) => ({
+          text: cat.name,
+          value: cat._id,
+        })),
+      render: (text, record) => {
+        return record.tireCategories.map((el) => (
+          <Tag color="blue"> {el} </Tag>
+        ));
+      },
+    },
+    {
       dataIndex: "make",
       key: "make",
       title: "Үйлдвэрлэгч",
@@ -395,13 +412,14 @@ const Tire = (props) => {
           el.discount = new Intl.NumberFormat().format(el.discount) + "₮";
           el.make = el.make && el.make.name;
           el.modal = el.modal && el.modal.name;
-
+          el.tireCategories = el.tireCategories.map((el) => el.name);
           refData.push({
             dataIndex: key,
             key,
             ...el,
           });
         });
+
       // console.log(refData);
       setData(refData);
     }

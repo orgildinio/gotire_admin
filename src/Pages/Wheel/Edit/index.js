@@ -22,7 +22,10 @@ import Loader from "../../../Components/Generals/Loader";
 
 //Actions
 import * as actions from "../../../redux/actions/wheelActions";
-
+import {
+  loadWheelCategories,
+  clear as clearCat,
+} from "../../../redux/actions/wheelCategoryActions";
 // Lib
 import base from "../../../base";
 import axios from "../../../axios-base";
@@ -47,21 +50,33 @@ const Add = (props) => {
     visible: false,
     message: "",
   });
+  const [expandedKeys, setExpandedKeys] = useState([]);
+  const [checkedKeys, setCheckedKeys] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+  const [autoExpandParent, setAutoExpandParent] = useState(true);
+  const [gData, setGData] = useState([]);
 
   const [checkedRadio, setCheckedRadio] = useState({
     status: true,
     star: false,
     isDiscount: false,
+    isNew: false,
   });
 
   // FUNCTIONS
   const init = () => {
     props.getWheel(props.match.params.id);
+    props.loadWheelCategories();
   };
 
   const clear = () => {
     props.clear();
     form.resetFields();
+    props.clearCat();
+    setGData([]);
+    setExpandedKeys([]);
+    setSelectedKeys([]);
+    setCheckedKeys([]);
     setPictures([]);
     setLoading(false);
   };
@@ -87,7 +102,13 @@ const Add = (props) => {
       ...values,
       star: values.star || false,
       isDiscount: values.isDiscount || false,
+      isNew: values.isNew || false,
+      wheelCategories: [...checkedKeys],
     };
+
+    if (data.wheelCategories.length === 0) {
+      data.wheelCategories = "";
+    }
 
     if (status === "draft") data.status = false;
     const sendData = convertFromdata(data);
@@ -102,6 +123,26 @@ const Add = (props) => {
     setPictures(list);
 
     setDeleteFiles((bf) => [...bf, deleteFile]);
+  };
+
+  // -- TREE FUNCTIONS
+  const onExpand = (expandedKeysValue) => {
+    setExpandedKeys(expandedKeysValue);
+    setAutoExpandParent(false);
+  };
+
+  const onCheck = (checkedKeysValue) => {
+    // console.log(checkedKeysValue);
+    setCheckedKeys(checkedKeysValue);
+  };
+
+  const onSelect = (selectedKeysValue, info) => {
+    // console.log("onSelect", info);
+    setSelectedKeys(selectedKeysValue);
+  };
+
+  const handleRadio = (value, type) => {
+    setCheckedRadio((bc) => ({ ...bc, [type]: value }));
   };
 
   // CONFIGS
@@ -175,7 +216,17 @@ const Add = (props) => {
         status: props.wheel.status,
         star: props.wheel.star,
         isDiscount: props.wheel.isDiscount,
+        isNew: props.wheel.isNew,
       });
+
+      if (
+        props.wheel.wheelCategories &&
+        props.wheel.wheelCategories.length > 0
+      ) {
+        setCheckedKeys(() => {
+          return props.wheel.wheelCategories.map((cat) => cat._id);
+        });
+      }
 
       props.wheel.pictures &&
         props.wheel.pictures.length > 0 &&
@@ -199,6 +250,11 @@ const Add = (props) => {
       setTimeout(() => props.history.replace("/wheel"), 2000);
     }
   }, [props.success]);
+
+  useEffect(() => {
+    const data = menuGenerateData(props.categories);
+    setGData(data);
+  }, [props.categories]);
 
   return (
     <>
@@ -392,19 +448,19 @@ const Add = (props) => {
                             <Editor
                               apiKey="2nubq7tdhudthiy6wfb88xgs36os4z3f4tbtscdayg10vo1o"
                               init={{
-                                width: 300,
+                                height: 300,
                                 menubar: false,
                                 plugins: [
-                                  "advlist textcolor autolink lists link image charmap print preview anchor tinydrive ",
+                                  "advlist autolink lists link image  tinydrive charmap print preview anchor",
                                   "searchreplace visualblocks code fullscreen",
                                   "insertdatetime media table paste code help wordcount image media  code  table  ",
                                 ],
                                 toolbar:
-                                  "mybutton | addPdf |  image | undo redo | fontselect fontsizeselect formatselect blockquote  | bold italic forecolor  backcolor | \
+                                  "mybutton image | undo redo | fontselect fontsizeselect formatselect blockquote  | bold italic backcolor | \
                         alignleft aligncenter alignright alignjustify | \
                         bullist numlist outdent indent | removeformat | help | link  | quickbars | media | code | tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol",
-                                file_picker_types: "image",
                                 tinydrive_token_provider: `${base.apiUrl}users/jwt`,
+                                file_picker_types: "image",
                                 automatic_uploads: false,
                                 setup: (editor) => {
                                   editor.ui.registry.addButton("mybutton", {
@@ -430,37 +486,6 @@ const Add = (props) => {
                                           `${base.cdnUrl}` + res.data.data;
                                         editor.insertContent(
                                           `<a href="${url}"> ${res.data.data} </a>`
-                                        );
-                                        setLoading({
-                                          visible: false,
-                                        });
-                                      };
-                                      input.click();
-                                    },
-                                  });
-                                  editor.ui.registry.addButton("addPdf", {
-                                    text: "PDF Файл оруулах",
-                                    onAction: () => {
-                                      let input =
-                                        document.createElement("input");
-                                      input.setAttribute("type", "file");
-                                      input.setAttribute("accept", ".pdf");
-                                      input.onchange = async function () {
-                                        let file = this.files[0];
-                                        const fData = new FormData();
-                                        fData.append("file", file);
-                                        setLoading({
-                                          visible: true,
-                                          message:
-                                            "Түр хүлээнэ үү файл хуулж байна",
-                                        });
-                                        const res = await axios.post(
-                                          "/file",
-                                          fData
-                                        );
-                                        const url = base.cdnUrl + res.data.data;
-                                        editor.insertContent(
-                                          `<iframe src="${url}" style="width:100%; min-width: 500px"> </iframe>`
                                         );
                                         setLoading({
                                           visible: false,
@@ -538,6 +563,7 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
+
                         <div className="col-12">
                           <Form.Item label="Хямдрал зарлах" name="isDiscount">
                             <Switch
@@ -547,6 +573,22 @@ const Add = (props) => {
                                 setCheckedRadio((bc) => ({
                                   ...bc,
                                   isDiscount: checked,
+                                }))
+                              }
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12">
+                          <Form.Item label="Шинэ хуучин эсэх" name="isNew">
+                            <Switch
+                              checkedChildren="Шинэ"
+                              unCheckedChildren="Хуучин"
+                              size="medium"
+                              checked={checkedRadio.isNew}
+                              onChange={(checked) =>
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  isNew: checked,
                                 }))
                               }
                             />
@@ -598,6 +640,26 @@ const Add = (props) => {
                   </div>
                   <div className="card">
                     <div class="card-header">
+                      <h3 class="card-title">АНГИЛАЛ</h3>
+                    </div>
+                    <div className="card-body">
+                      <Form.Item name="categories">
+                        <Tree
+                          checkable
+                          onExpand={onExpand}
+                          expandedKeys={expandedKeys}
+                          autoExpandParent={autoExpandParent}
+                          onCheck={onCheck}
+                          checkedKeys={checkedKeys}
+                          onSelect={onSelect}
+                          selectedKeys={selectedKeys}
+                          treeData={gData}
+                        />
+                      </Form.Item>
+                    </div>
+                  </div>
+                  <div className="card">
+                    <div class="card-header">
                       <h3 class="card-title">Зураг оруулах</h3>
                     </div>
                     <div className="card-body">
@@ -633,14 +695,17 @@ const mapStateToProps = (state) => {
     error: state.wheelReducer.error,
     loading: state.wheelReducer.loading,
     wheel: state.wheelReducer.wheel,
+    categories: state.wheelCategoryReducer.categories,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
     updateWheel: (id, data) => dispatch(actions.updateWheel(id, data)),
+    loadWheelCategories: () => dispatch(loadWheelCategories()),
     getWheel: (id) => dispatch(actions.getWheel(id)),
     clear: () => dispatch(actions.clear()),
+    clearCat: () => dispatch(clearCat()),
   };
 };
 

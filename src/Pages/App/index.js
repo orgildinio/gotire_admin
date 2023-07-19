@@ -70,7 +70,14 @@ import TireMakeEdit from "../Tire/Make/Edit";
 import TireModal from "../Tire/Modal";
 import TireModalAdd from "../Tire/Modal/Add";
 import TireModalEdit from "../Tire/Modal/Edit";
-
+// TIRE CATEGORIES
+import TireCategory from "../Tire/Tire_categories";
+// PRODUCT
+import Product from "../Product";
+import ProductAdd from "../Product/Add";
+import ProductEdit from "../Product/Edit";
+// PRODUCT CATEGORIES
+import ProductCategory from "../Product/Product_categories";
 //User
 import User from "../Users";
 import UserAdd from "../Users/Add";
@@ -90,7 +97,13 @@ import Dashboard from "../Dashboard";
 import Wheel from "../Wheel";
 import WheelAdd from "../Wheel/Add";
 import WheelEdit from "../Wheel/Edit";
-
+// WHEEL CATEGORIES
+import WheelCategory from "../Wheel/Wheel_categories";
+// SETOF
+import Setof from "../Setof";
+import SetofAdd from "../Setof/Add";
+import SetofEdit from "../Setof/Edit";
+import SetOfCategories from "../Setof/SetOf_categories";
 // Actions
 import { tokenCheck } from "../../redux/actions/tokenActions";
 
@@ -156,6 +169,7 @@ function App(props) {
               <Route path="/services" exact component={Service} />
               //Tire
               <Route path={"/tire/edit/:id"} component={TireEdit} />
+              <Route path={"/tire/categories"} component={TireCategory} />
               <Route path="/tire/add" component={TireAdd} />
               <Route path="/tire" exact component={Tire} />
               //Tire make
@@ -170,6 +184,11 @@ function App(props) {
               <Route path="/tire/modal/edit/:id" component={TireModalEdit} />
               <Route path="/tire/modal/add" component={TireModalAdd} />
               <Route path="/tire/modal" exact component={TireModal} />
+              // SETOF
+              <Route path="/set/edit/:id" component={SetofEdit} />
+              <Route path="/set/categories" component={SetOfCategories} />
+              <Route path="/set/add" component={SetofAdd} />
+              <Route path="/set" exact component={Setof} />
               //users
               <Route path="/users/add" exact component={UserAdd} />
               <Route path="/users/edit/:id" exact component={UserEdit} />
@@ -179,8 +198,18 @@ function App(props) {
               <Route path="/news/categories" exact component={NewsCategories} />
               <Route path="/news/add" component={NewsAdd} />
               <Route path="/news" exact component={News} />
+              //Product
+              <Route path={"/product/edit/:id"} component={ProductEdit} />
+              <Route
+                path="/product/categories"
+                exact
+                component={ProductCategory}
+              />
+              <Route path="/product/add" component={ProductAdd} />
+              <Route path="/product" exact component={Product} />
               //Wheel
               <Route path={"/wheel/edit/:id"} component={WheelEdit} />
+              <Route path="/wheel/categories" exact component={WheelCategory} />
               <Route path="/wheel/add" component={WheelAdd} />
               <Route path="/wheel" exact component={Wheel} />
               // Websettings

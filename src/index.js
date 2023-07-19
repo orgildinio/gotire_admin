@@ -31,7 +31,12 @@ import loginReducer from "./redux/reducer/loginReducer";
 import userReducer from "./redux/reducer/userReducer";
 import webInfoReducer from "./redux/reducer/webinfoReducer";
 import wheelReducer from "./redux/reducer/wheelReducer";
-
+import wheelCategoryReducer from "./redux/reducer/wheelCategoryReducer";
+import tireCategoryReducer from "./redux/reducer/tireCategoryReducer";
+import setOfReducer from "./redux/reducer/setOfReducer";
+import setofCategoryReducer from "./redux/reducer/setofCategoryReducer";
+import productReducer from "./redux/reducer/productReducer";
+import productCategoryReducer from "./redux/reducer/productCategoryReducer";
 // styles
 import "./index.css";
 
@@ -72,6 +77,12 @@ const reducers = combineReducers({
   userReducer,
   webInfoReducer,
   wheelReducer,
+  wheelCategoryReducer,
+  setofCategoryReducer,
+  tireCategoryReducer,
+  setOfReducer,
+  productReducer,
+  productCategoryReducer,
 });
 
 const middlewares = [loggerMiddlaware, thunk];

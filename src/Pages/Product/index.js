@@ -18,9 +18,9 @@ import { toastControl } from "../../lib/toasControl";
 import Loader from "../../Components/Generals/Loader";
 
 // Actions
-import * as actions from "../../redux/actions/wheelActions";
+import * as actions from "../../redux/actions/productActions";
 
-const Wheel = (props) => {
+const Product = (props) => {
   const searchInput = useRef(null);
   //STATES
   const [searchText, setSearchText] = useState("");
@@ -125,11 +125,11 @@ const Wheel = (props) => {
 
   const [columns, setColumns] = useState([
     {
-      dataIndex: "wheelCode",
-      key: "wheelCode",
-      title: "Обудын код",
+      dataIndex: "productCode",
+      key: "productCode",
+      title: "Барааны код",
       status: true,
-      ...getColumnSearchProps("wheelCode"),
+      ...getColumnSearchProps("productCode"),
       sorter: (a, b) => handleSort(),
     },
     {
@@ -214,18 +214,18 @@ const Wheel = (props) => {
       sorter: (a, b) => handleSort(),
     },
     {
-      dataIndex: "wheelCategories",
-      key: "wheelCategories",
+      dataIndex: "productCategories",
+      key: "productCategories",
       title: "Ангилал",
       status: true,
       filters:
-        props.wheelCategories &&
-        props.wheelCategories.map((cat) => ({
+        props.productCategories &&
+        props.productCategories.map((cat) => ({
           text: cat.name,
           value: cat._id,
         })),
       render: (text, record) => {
-        return record.wheelCategories.map((el) => (
+        return record.productCategories.map((el) => (
           <Tag color="blue"> {el} </Tag>
         ));
       },
@@ -250,56 +250,6 @@ const Wheel = (props) => {
     },
 
     {
-      dataIndex: "diameter",
-      key: "diameter",
-      title: "Диаметр",
-      status: true,
-      ...getColumnSearchProps("diameter"),
-      sorter: (a, b) => handleSort(),
-    },
-    {
-      dataIndex: "width",
-      key: "width",
-      title: "Өргөн",
-      status: true,
-      ...getColumnSearchProps("width"),
-      sorter: (a, b) => handleSort(),
-    },
-    {
-      dataIndex: "boltPattern",
-      key: "boltPattern",
-      title: "Болтны нүх",
-      status: true,
-      ...getColumnSearchProps("boltPattern"),
-      sorter: (a, b) => handleSort(),
-    },
-    {
-      dataIndex: "inSet",
-      key: "inSet",
-      title: "Дотогшоо",
-      status: false,
-      ...getColumnSearchProps("inSet"),
-      sorter: (a, b) => handleSort(),
-    },
-    {
-      dataIndex: "offSet",
-      key: "offSet",
-      title: "Гадагшаа",
-      status: false,
-      ...getColumnSearchProps("offSet"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "rim",
-      key: "rim",
-      title: "RIM Хэмжээ",
-      status: true,
-      ...getColumnSearchProps("rim"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
       dataIndex: "price",
       key: "price",
       title: "Үнэ",
@@ -314,24 +264,6 @@ const Wheel = (props) => {
       title: "Хямдарсан үнэ",
       status: false,
       ...getColumnSearchProps("discount"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "threadSize",
-      key: "threadSize",
-      title: "Болтны нүхний хэмжээ",
-      status: false,
-      ...getColumnSearchProps("threadSize"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "centerBore",
-      key: "centerBore",
-      title: "Голын нүхний диаметр",
-      status: false,
-      ...getColumnSearchProps("centerBore"),
       sorter: (a, b) => handleSort(),
     },
 
@@ -391,12 +323,12 @@ const Wheel = (props) => {
     if (selectedRowKeys.length != 1) {
       toastControl("error", "Нэг өгөгдөл сонгоно уу");
     } else {
-      history.push(`/wheel/edit/${selectedRowKeys[0]}`);
+      history.push(`/product/edit/${selectedRowKeys[0]}`);
     }
   };
 
   const handleDelete = () => {
-    props.deleteMultWheel(selectedRowKeys);
+    props.deleteMultProduct(selectedRowKeys);
   };
 
   // -- MODAL STATE
@@ -431,7 +363,7 @@ const Wheel = (props) => {
   useEffect(() => {
     if (querys) {
       const query = queryBuild();
-      props.loadWheel(query);
+      props.loadProduct(query);
     }
   }, [querys]);
 
@@ -453,11 +385,11 @@ const Wheel = (props) => {
 
   // -- NEWS GET DONE EFFECT
   useEffect(() => {
-    if (props.wheels) {
+    if (props.products) {
       const refData = [];
 
-      props.wheels.length > 0 &&
-        props.wheels.map((el) => {
+      props.products.length > 0 &&
+        props.products.map((el) => {
           const key = el._id;
           delete el._id;
           el.status = el.status == true ? "Зарагдаагүй" : "Зарагдсан";
@@ -476,7 +408,7 @@ const Wheel = (props) => {
             .utcOffset("+0800")
             .format("YYYY-MM-DD HH:mm:ss");
 
-          el.wheelCategories = el.wheelCategories.map((el) => el.name);
+          el.productCategories = el.productCategories.map((el) => el.name);
 
           refData.push({
             dataIndex: key,
@@ -487,7 +419,7 @@ const Wheel = (props) => {
 
       setData(refData);
     }
-  }, [props.wheels]);
+  }, [props.products]);
 
   // Start moment
   useEffect(() => {
@@ -507,7 +439,7 @@ const Wheel = (props) => {
   // -- INIT
   const init = () => {
     const query = queryBuild();
-    props.loadWheel(`${query}`);
+    props.loadProduct(`${query}`);
   };
 
   const clear = () => {};
@@ -612,7 +544,7 @@ const Wheel = (props) => {
       }
       case "edit": {
         if (selectedRowKeys && selectedRowKeys.length === 1) {
-          props.history.replace("/wheel/edit/" + selectedRowKeys[0]);
+          props.history.replace("/product/edit/" + selectedRowKeys[0]);
         } else {
           toastControl("error", "Нэг өгөгдөл сонгоно уу");
         }
@@ -659,7 +591,7 @@ const Wheel = (props) => {
   // -- CONVER JSON  TO EXCEL
   const exportExcel = async () => {
     const query = queryBuild();
-    const response = await axios.get("wheel/excel?" + query);
+    const response = await axios.get("product/excel?" + query);
     let excelData = [];
     if (response) {
       const data = response.data.data;
@@ -742,7 +674,7 @@ const Wheel = (props) => {
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Обуд" />
+        <PageTitle name="Бусад сэлбэгүүд" />
         <div className="page-sub-menu">
           <Menus />
         </div>
@@ -751,14 +683,14 @@ const Wheel = (props) => {
           <div className="container-fluid">
             <div className="card datatable-card">
               <div className="card-header">
-                <h3 className="card-title">Бүх обудууд</h3>
+                <h3 className="card-title">Бүх сэлбэгүүд</h3>
               </div>
               <div className="card-body datatable-card-body">
                 <div className="datatable-header-tools">
                   <div className="datatable-actions">
                     <button
                       className="datatable-action add-bg"
-                      onClick={() => history.push(`/wheel/add`)}
+                      onClick={() => history.push(`/product/add`)}
                     >
                       <i className="fa fa-plus"></i> Нэмэх
                     </button>
@@ -902,20 +834,20 @@ const Wheel = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    loading: state.wheelReducer.loading,
-    success: state.wheelReducer.success,
-    error: state.wheelReducer.error,
-    wheels: state.wheelReducer.wheels,
-    pagination: state.wheelReducer.paginationLast,
+    loading: state.productReducer.loading,
+    success: state.productReducer.success,
+    error: state.productReducer.error,
+    products: state.productReducer.products,
+    pagination: state.productReducer.paginationLast,
   };
 };
 
 const mapDispatchToProp = (dispatch) => {
   return {
-    loadWheel: (query) => dispatch(actions.loadWheel(query)),
-    deleteMultWheel: (ids) => dispatch(actions.deleteMultWheel(ids)),
+    loadProduct: (query) => dispatch(actions.loadProduct(query)),
+    deleteMultProduct: (ids) => dispatch(actions.deleteMultProduct(ids)),
     clear: () => dispatch(actions.clear()),
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProp)(Wheel);
+export default connect(mapStateToProps, mapDispatchToProp)(Product);

@@ -4,17 +4,18 @@ import {
   Input,
   Button,
   Switch,
+  Tree,
   Upload,
+  Space,
+  Radio,
   message,
   Select,
   InputNumber,
   DatePicker,
   AutoComplete,
-  Tree,
 } from "antd";
 import { connect } from "react-redux";
 import { Editor } from "@tinymce/tinymce-react";
-import dayjs from "dayjs";
 
 //Components
 import PageTitle from "../../../Components/PageTitle";
@@ -23,21 +24,21 @@ import Loader from "../../../Components/Generals/Loader";
 
 //Actions
 import { tinymceAddPhoto } from "../../../redux/actions/imageActions";
-import {
-  loadTireCategories,
-  clear as clearCat,
-} from "../../../redux/actions/tireCategoryActions";
-
+import { menuGenerateData } from "../../../lib/menuGenerate";
 import { loadTireMake } from "../../../redux/actions/tireMakeActions";
 import { loadTireModal } from "../../../redux/actions/tireModalActions";
-import * as actions from "../../../redux/actions/tireActions";
+import * as actions from "../../../redux/actions/setOfActions";
+
+import {
+  loadSetProductCategories,
+  clear as clearCat,
+} from "../../../redux/actions/setofCategoriesActions";
 
 // Lib
 import base from "../../../base";
 import axios from "../../../axios-base";
 import { toastControl } from "src/lib/toasControl";
 import { convertFromdata } from "../../../lib/handleFunction";
-import { menuGenerateData } from "../../../lib/menuGenerate";
 
 const requiredRule = {
   required: true,
@@ -49,15 +50,14 @@ const { Dragger } = Upload;
 const Add = (props) => {
   const [form] = Form.useForm();
   const [pictures, setPictures] = useState([]);
-  const [deleteFiles, setDeleteFiles] = useState([]);
-  const [choiseDate, setChoiseDate] = useState();
-  const [autoComplete, setAutoComplete] = useState(null);
-  const [gData, setGData] = useState([]);
   const [expandedKeys, setExpandedKeys] = useState([]);
   const [checkedKeys, setCheckedKeys] = useState([]);
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [autoExpandParent, setAutoExpandParent] = useState(true);
-
+  const [choiseData, setChoiseDate] = useState();
+  const [autoComplete, setAutoComplete] = useState(null);
+  const [autoWheelComplete, setAutoWheelComplete] = useState(null);
+  const [gData, setGData] = useState([]);
   const [checkedRadio, setCheckedRadio] = useState({
     status: true,
     star: false,
@@ -74,19 +74,18 @@ const Add = (props) => {
   const init = () => {
     props.loadTireMake();
     props.loadTireModal();
-    props.loadTireCategories();
-    props.getTire(props.match.params.id);
+    props.loadSetProductCategories();
   };
 
   const clear = () => {
     props.clear();
     form.resetFields();
-    setPictures([]);
     props.clearCat();
-    setGData([]);
+    setPictures([]);
     setExpandedKeys([]);
     setSelectedKeys([]);
     setCheckedKeys([]);
+    setGData([]);
     setLoading(false);
   };
 
@@ -94,38 +93,42 @@ const Add = (props) => {
     form.setFieldsValue({ details: event });
   };
 
-  const handleEdit = (values, status = null) => {
-    if (pictures.length > 0) {
-      values.pictures = pictures.map((el) => el.name);
-    } else {
-      values.pictures = [];
-    }
+  // -- TREE FUNCTIONS
+  const onExpand = (expandedKeysValue) => {
+    setExpandedKeys(expandedKeysValue);
+    setAutoExpandParent(false);
+  };
 
-    if (deleteFiles && deleteFiles.length > 0) {
-      deleteFiles.map(async (deleteFile) => {
-        await axios.delete("/imgupload", { data: { file: deleteFile } });
-      });
-    }
+  const onCheck = (checkedKeysValue) => {
+    setCheckedKeys(checkedKeysValue);
+  };
+
+  const onSelect = (selectedKeysValue, info) => {
+    setSelectedKeys(selectedKeysValue);
+  };
+
+  const handleAdd = (values, status = null) => {
+    if (pictures.length > 0) values.pictures = pictures.map((el) => el.name);
 
     const data = {
       ...values,
       star: values.star || false,
       isDiscount: values.isDiscount || false,
-      tireCategories: [...checkedKeys],
+      setProductCategories: [...checkedKeys],
     };
 
-    if (data.tireCategories.length === 0) {
-      data.tireCategories = "";
+    if (data.setProductCategories.length === 0) {
+      delete data.setProductCategories;
     }
 
-    data.year = choiseDate;
+    data.year = choiseData;
     if (status === "draft") {
       data.status = false;
     }
 
     const sendData = convertFromdata(data);
 
-    props.updateTire(props.match.params.id, sendData);
+    props.saveSetproduct(sendData);
   };
 
   const handleDate = (date, dateString) => {
@@ -143,7 +146,14 @@ const Add = (props) => {
     list.splice(index, 1);
     setPictures(list);
 
-    setDeleteFiles((bf) => [...bf, deleteFile]);
+    axios
+      .delete("/imgupload", { data: { file: deleteFile } })
+      .then((succ) => {
+        toastControl("success", "Амжилттай файл устгагдлаа");
+      })
+      .catch((error) =>
+        toastControl("error", "Файл устгах явцад алдаа гарлаа")
+      );
   };
 
   // CONFIGS
@@ -191,29 +201,20 @@ const Add = (props) => {
     listType: "picture",
   };
 
-  // -- TREE FUNCTIONS
-  const onExpand = (expandedKeysValue) => {
-    setExpandedKeys(expandedKeysValue);
-    setAutoExpandParent(false);
-  };
-
-  const onCheck = (checkedKeysValue) => {
-    // console.log(checkedKeysValue);
-    setCheckedKeys(checkedKeysValue);
-  };
-
-  const onSelect = (selectedKeysValue, info) => {
-    // console.log("onSelect", info);
-    setSelectedKeys(selectedKeysValue);
-  };
-
   // USEEFFECT
   useEffect(() => {
     init();
     const fetchData = async () => {
       const result = await axios.get("/tires/groups");
+      const resultWheel = await axios.get("/wheels/groups");
       if (result && result.data) {
         setAutoComplete(() => ({ ...result.data }));
+      } else if (result && result.error) {
+        toastControl("error", result.error);
+      }
+
+      if (resultWheel && resultWheel.data) {
+        setAutoWheelComplete(() => ({ ...resultWheel.data }));
       } else if (result && result.error) {
         toastControl("error", result.error);
       }
@@ -237,34 +238,6 @@ const Add = (props) => {
   }, [props.success]);
 
   useEffect(() => {
-    if (props.tire) {
-      form.setFieldsValue({ ...props.tire });
-      setCheckedRadio({
-        status: props.tire.status,
-        star: props.tire.star,
-        isDiscount: props.tire.isDiscount,
-      });
-
-      setChoiseDate(props.tire.year);
-
-      if (props.tire.tireCategories && props.tire.tireCategories.length > 0) {
-        setCheckedKeys(() => {
-          return props.tire.tireCategories.map((cat) => cat._id);
-        });
-      }
-
-      props.tire.pictures &&
-        props.tire.pictures.length > 0 &&
-        setPictures(
-          props.tire.pictures.map((img) => ({
-            name: img,
-            url: `${base.cdnUrl}${img}`,
-          }))
-        );
-    }
-  }, [props.tire]);
-
-  useEffect(() => {
     const data = menuGenerateData(props.categories);
     setGData(data);
   }, [props.categories]);
@@ -272,7 +245,7 @@ const Add = (props) => {
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Дугуй шинэчлэх" />
+        <PageTitle name="Дугуй нэмэх" />
         <div className="page-sub-menu"></div>
         <div className="content">
           <Loader show={loading.visible}> {loading.message} </Loader>
@@ -295,8 +268,52 @@ const Add = (props) => {
                         </div>
                         <div className="col-12">
                           <Form.Item
+                            label="Үнэ"
+                            name="price"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <InputNumber
+                              style={{ width: "100%" }}
+                              placeholder="Үнэ оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        {checkedRadio.isDiscount === true && (
+                          <div className="col-12">
+                            <Form.Item
+                              label="Хямдарсан үнэ"
+                              name="discount"
+                              rules={[requiredRule]}
+                              hasFeedback
+                            >
+                              <InputNumber
+                                style={{ width: "100%" }}
+                                placeholder="Хямдарсан үнэ оруулна уу"
+                              />
+                            </Form.Item>
+                          </div>
+                        )}
+                        <div className="col-12">
+                          <Form.Item
+                            label="Багц"
+                            name="setOf"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <InputNumber
+                              style={{ width: "100%" }}
+                              placeholder="Багц оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12" style={{ margin: "15px 0px" }}>
+                          <h6> Дугуйны мэдээлэл</h6>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
                             label="Үйлдвэрлэгч"
-                            name="make"
+                            name="tiremake"
                             rules={[requiredRule]}
                             hasFeedback
                           >
@@ -314,8 +331,12 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
-                        <div className="col-12">
-                          <Form.Item label="Загвар" name="modal" hasFeedback>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Загвар"
+                            name="tiremodal"
+                            hasFeedback
+                          >
                             <Select
                               options={
                                 props.tiremodals &&
@@ -333,7 +354,7 @@ const Add = (props) => {
                         <div className="col-4">
                           <Form.Item
                             label="Өргөн"
-                            name="width"
+                            name="tirewidth"
                             rules={[requiredRule]}
                             hasFeedback
                           >
@@ -353,7 +374,7 @@ const Add = (props) => {
                         <div className="col-4">
                           <Form.Item
                             label="Хажуугийн талын хэмжээ"
-                            name="height"
+                            name="tireheight"
                             rules={[requiredRule]}
                             hasFeedback
                           >
@@ -373,7 +394,7 @@ const Add = (props) => {
                         <div className="col-4">
                           <Form.Item
                             label="Диаметрын хэмжээ"
-                            name="diameter"
+                            name="tirediameter"
                             rules={[requiredRule]}
                             hasFeedback
                           >
@@ -390,25 +411,11 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Үйлдвэрлэгдсэн огноо"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <DatePicker
-                              style={{ width: "100%" }}
-                              picker="year"
-                              placeholder="Огноо сонгоно уу"
-                              defaultValue={dayjs(choiseDate)}
-                              onChange={handleDate}
-                            />
-                          </Form.Item>
-                        </div>
+
                         <div className="col-4">
                           <Form.Item
                             label="Ашиглалтын хувь"
-                            name="use"
+                            name="tireuse"
                             rules={[requiredRule]}
                             hasFeedback
                           >
@@ -421,7 +428,7 @@ const Add = (props) => {
                         <div className="col-4">
                           <Form.Item
                             label="Улилрал"
-                            name="season"
+                            name="tireseason"
                             rules={[requiredRule]}
                             hasFeedback
                           >
@@ -444,45 +451,114 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
+
+                        <div className="col-12" style={{ margin: "15px 0px" }}>
+                          <h6> Обудын мэдээлэл </h6>
+                        </div>
                         <div className="col-4">
                           <Form.Item
-                            label="Үнэ"
-                            name="price"
+                            label="Обудын диаметр"
+                            name="wheeldiameter"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <InputNumber
+                            <AutoComplete
                               style={{ width: "100%" }}
-                              placeholder="Үнэ оруулна уу"
+                              options={
+                                autoWheelComplete &&
+                                autoWheelComplete["diameter"] &&
+                                autoWheelComplete["diameter"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Диаметрын хэмжээг оруулна уу"
                             />
                           </Form.Item>
                         </div>
-                        {checkedRadio.isDiscount === true && (
-                          <div className="col-4">
-                            <Form.Item
-                              label="Хямдарсан үнэ"
-                              name="discount"
-                              rules={[requiredRule]}
-                              hasFeedback
-                            >
-                              <InputNumber
-                                style={{ width: "100%" }}
-                                placeholder="Хямдарсан үнэ оруулна уу"
-                              />
-                            </Form.Item>
-                          </div>
-                        )}
                         <div className="col-4">
                           <Form.Item
-                            label="Багц"
-                            name="setOf"
+                            label="Өргөн (J) оруулна уу"
+                            name="wheelwidth"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <InputNumber
+                            <AutoComplete
                               style={{ width: "100%" }}
-                              placeholder="Багц оруулна уу"
+                              options={
+                                autoWheelComplete &&
+                                autoWheelComplete["width"] &&
+                                autoWheelComplete["width"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Өндрийг оруулна уу"
                             />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Болтны хоорондын зайны хэмжээ"
+                            name="wheelboltPattern"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <AutoComplete
+                              options={
+                                autoWheelComplete &&
+                                autoWheelComplete["boltPattern"] &&
+                                autoWheelComplete["boltPattern"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Болтны хоорондын зайны  хэмжээг оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Rim хэмжээ"
+                            name="wheelrim"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <AutoComplete
+                              options={
+                                autoWheelComplete &&
+                                autoWheelComplete["rim"] &&
+                                autoWheelComplete["rim"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Rim хэмжээг оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+
+                        <div className="col-4">
+                          <Form.Item
+                            label="Болтны хэмжээ"
+                            name="wheelthreadSize"
+                            hasFeedback
+                          >
+                            <AutoComplete
+                              options={
+                                autoWheelComplete &&
+                                autoWheelComplete["threadSize"] &&
+                                autoWheelComplete["threadSize"].map((el) => ({
+                                  value: el.name,
+                                }))
+                              }
+                              placeholder="Болтны нүхний хэмжээг оруулна уу"
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-4">
+                          <Form.Item
+                            label="Обудын голын диаметрын хэмжээ"
+                            name="wheelcenterBore"
+                            hasFeedback
+                          >
+                            <Input placeholder="Обудын голын диаметрын хэмжээг оруулна уу" />
                           </Form.Item>
                         </div>
 
@@ -672,14 +748,14 @@ const Add = (props) => {
                             form
                               .validateFields()
                               .then((values) => {
-                                handleEdit(values);
+                                handleAdd(values);
                               })
                               .catch((info) => {
                                 // console.log(info);
                               });
                           }}
                         >
-                          Хадгалах
+                          Нэмэх
                         </Button>
                         <Button
                           key="draft"
@@ -688,7 +764,7 @@ const Add = (props) => {
                             form
                               .validateFields()
                               .then((values) => {
-                                handleEdit(values, "draft");
+                                handleAdd(values, "draft");
                               })
                               .catch((info) => {
                                 // console.log(info);
@@ -756,24 +832,22 @@ const Add = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    success: state.tireReducer.success,
-    error: state.tireReducer.error,
-    loading: state.tireReducer.loading,
+    success: state.setOfReducer.success,
+    error: state.setOfReducer.error,
+    loading: state.setOfReducer.loading,
     tiremakes: state.tireMakeReducer.tiremakes,
     tiremodals: state.tireModalReducer.tiremodals,
-    tire: state.tireReducer.tire,
-    categories: state.tireCategoryReducer.categories,
+    categories: state.setofCategoryReducer.categories,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    loadSetProductCategories: () => dispatch(loadSetProductCategories()),
     tinymceAddPhoto: (file) => dispatch(tinymceAddPhoto(file)),
     loadTireMake: () => dispatch(loadTireMake()),
     loadTireModal: () => dispatch(loadTireModal()),
-    loadTireCategories: () => dispatch(loadTireCategories()),
-    updateTire: (id, data) => dispatch(actions.updateTire(id, data)),
-    getTire: (id) => dispatch(actions.getTire(id)),
+    saveSetproduct: (data) => dispatch(actions.saveSetproduct(data)),
     clear: () => dispatch(actions.clear()),
     clearCat: () => dispatch(clearCat()),
   };

@@ -24,10 +24,14 @@ import Loader from "../../../Components/Generals/Loader";
 
 //Actions
 import { tinymceAddPhoto } from "../../../redux/actions/imageActions";
-
+import { menuGenerateData } from "../../../lib/menuGenerate";
 import { loadTireMake } from "../../../redux/actions/tireMakeActions";
 import { loadTireModal } from "../../../redux/actions/tireModalActions";
 import * as actions from "../../../redux/actions/tireActions";
+import {
+  loadTireCategories,
+  clear as clearCat,
+} from "../../../redux/actions/tireCategoryActions";
 
 // Lib
 import base from "../../../base";
@@ -45,12 +49,13 @@ const { Dragger } = Upload;
 const Add = (props) => {
   const [form] = Form.useForm();
   const [pictures, setPictures] = useState([]);
-  const [audios, setAudios] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [type, setType] = useState("default");
+  const [expandedKeys, setExpandedKeys] = useState([]);
+  const [checkedKeys, setCheckedKeys] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+  const [autoExpandParent, setAutoExpandParent] = useState(true);
   const [choiseData, setChoiseDate] = useState();
   const [autoComplete, setAutoComplete] = useState(null);
-
+  const [gData, setGData] = useState([]);
   const [checkedRadio, setCheckedRadio] = useState({
     status: true,
     star: false,
@@ -67,13 +72,18 @@ const Add = (props) => {
   const init = () => {
     props.loadTireMake();
     props.loadTireModal();
+    props.loadTireCategories();
   };
 
   const clear = () => {
     props.clear();
     form.resetFields();
+    props.clearCat();
     setPictures([]);
-    setType("default");
+    setExpandedKeys([]);
+    setSelectedKeys([]);
+    setCheckedKeys([]);
+    setGData([]);
     setLoading(false);
   };
 
@@ -81,8 +91,20 @@ const Add = (props) => {
     form.setFieldsValue({ details: event });
   };
 
-  const onChangeType = (e) => {
-    setType(e.target.value);
+  // -- TREE FUNCTIONS
+  const onExpand = (expandedKeysValue) => {
+    setExpandedKeys(expandedKeysValue);
+    setAutoExpandParent(false);
+  };
+
+  const onCheck = (checkedKeysValue) => {
+    // console.log(checkedKeysValue);
+    setCheckedKeys(checkedKeysValue);
+  };
+
+  const onSelect = (selectedKeysValue, info) => {
+    // console.log("onSelect", info);
+    setSelectedKeys(selectedKeysValue);
   };
 
   const handleAdd = (values, status = null) => {
@@ -92,7 +114,12 @@ const Add = (props) => {
       ...values,
       star: values.star || false,
       isDiscount: values.isDiscount || false,
+      tireCategories: [...checkedKeys],
     };
+
+    if (data.tireCategories.length === 0) {
+      delete data.tireCategories;
+    }
 
     data.year = choiseData;
     if (status === "draft") {
@@ -106,22 +133,6 @@ const Add = (props) => {
 
   const handleDate = (date, dateString) => {
     setChoiseDate(dateString);
-  };
-
-  const setFunction = (stType, sData) => {
-    switch (stType) {
-      case "audios":
-        setAudios((ba) => [...ba, sData]);
-        break;
-      case "pictures":
-        setPictures((bp) => [...bp, sData]);
-        break;
-      case "videos":
-        setVideos((bv) => [...bv, sData]);
-        break;
-      default:
-        break;
-    }
   };
 
   const handleRemove = (stType, file) => {
@@ -218,6 +229,11 @@ const Add = (props) => {
       setTimeout(() => props.history.replace("/tire"), 2000);
     }
   }, [props.success]);
+
+  useEffect(() => {
+    const data = menuGenerateData(props.categories);
+    setGData(data);
+  }, [props.categories]);
 
   return (
     <>
@@ -435,19 +451,7 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
-                        <div className="col-12">
-                          <Form.Item
-                            label="Хүргэлтийн мэдээлэл"
-                            name="delivery"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <Input
-                              style={{ width: "100%" }}
-                              placeholder="Хүргэлт байгаа эсэх эсвэл хүргэлт хүрэгдэх хугацаа"
-                            />
-                          </Form.Item>
-                        </div>
+
                         <div className="col-12">
                           <Form.Item
                             label="Дэлгэрэнгүй"
@@ -665,7 +669,26 @@ const Add = (props) => {
                       </div>
                     </div>
                   </div>
-
+                  <div className="card">
+                    <div class="card-header">
+                      <h3 class="card-title">АНГИЛАЛ</h3>
+                    </div>
+                    <div className="card-body">
+                      <Form.Item name="categories">
+                        <Tree
+                          checkable
+                          onExpand={onExpand}
+                          expandedKeys={expandedKeys}
+                          autoExpandParent={autoExpandParent}
+                          onCheck={onCheck}
+                          checkedKeys={checkedKeys}
+                          onSelect={onSelect}
+                          selectedKeys={selectedKeys}
+                          treeData={gData}
+                        />
+                      </Form.Item>
+                    </div>
+                  </div>
                   <div className="card">
                     <div class="card-header">
                       <h3 class="card-title">Зураг оруулах</h3>
@@ -704,16 +727,19 @@ const mapStateToProps = (state) => {
     loading: state.tireReducer.loading,
     tiremakes: state.tireMakeReducer.tiremakes,
     tiremodals: state.tireModalReducer.tiremodals,
+    categories: state.tireCategoryReducer.categories,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    loadTireCategories: () => dispatch(loadTireCategories()),
     tinymceAddPhoto: (file) => dispatch(tinymceAddPhoto(file)),
     loadTireMake: () => dispatch(loadTireMake()),
     loadTireModal: () => dispatch(loadTireModal()),
     saveTire: (data) => dispatch(actions.saveTire(data)),
     clear: () => dispatch(actions.clear()),
+    clearCat: () => dispatch(clearCat()),
   };
 };
 

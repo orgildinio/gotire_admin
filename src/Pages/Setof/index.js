@@ -18,9 +18,9 @@ import { toastControl } from "../../lib/toasControl";
 import Loader from "../../Components/Generals/Loader";
 
 // Actions
-import * as actions from "../../redux/actions/wheelActions";
+import * as actions from "../../redux/actions/setOfActions";
 
-const Wheel = (props) => {
+const SetOf = (props) => {
   const searchInput = useRef(null);
   //STATES
   const [searchText, setSearchText] = useState("");
@@ -125,11 +125,11 @@ const Wheel = (props) => {
 
   const [columns, setColumns] = useState([
     {
-      dataIndex: "wheelCode",
-      key: "wheelCode",
-      title: "Обудын код",
+      dataIndex: "setofCode",
+      key: "setofCode",
+      title: "Дугуй обудын код",
       status: true,
-      ...getColumnSearchProps("wheelCode"),
+      ...getColumnSearchProps("setofCode"),
       sorter: (a, b) => handleSort(),
     },
     {
@@ -150,7 +150,24 @@ const Wheel = (props) => {
       ],
       sorter: (a, b) => handleSort(),
     },
-
+    {
+      dataIndex: "pictures",
+      key: "pictures",
+      title: "Зураг",
+      status: true,
+      render: (text, record) => {
+        // console.log(record);
+        return (
+          <div className="table-image">
+            {record.pictures ? (
+              <img src={`${record.pictures}`} />
+            ) : (
+              "Зураг оруулаагүй байна"
+            )}
+          </div>
+        );
+      },
+    },
     {
       dataIndex: "isNew",
       key: "isNew",
@@ -213,146 +230,87 @@ const Wheel = (props) => {
       ...getColumnSearchProps("name"),
       sorter: (a, b) => handleSort(),
     },
+
     {
-      dataIndex: "wheelCategories",
-      key: "wheelCategories",
-      title: "Ангилал",
+      dataIndex: "tiresize",
+      key: "tiresize",
+      title: "Дугуйны хэмжээ",
       status: true,
-      filters:
-        props.wheelCategories &&
-        props.wheelCategories.map((cat) => ({
-          text: cat.name,
-          value: cat._id,
-        })),
-      render: (text, record) => {
-        return record.wheelCategories.map((el) => (
-          <Tag color="blue"> {el} </Tag>
-        ));
-      },
-    },
-    {
-      dataIndex: "pictures",
-      key: "pictures",
-      title: "Зураг",
-      status: true,
-      render: (text, record) => {
-        // console.log(record);
-        return (
-          <div className="table-image">
-            {record.pictures && record.pictures.length > 0 ? (
-              <img src={`${base.cdnUrl}150x150/${record.pictures[0]}`} />
-            ) : (
-              "Зураг оруулаагүй байна"
-            )}
-          </div>
-        );
-      },
+      ...getColumnSearchProps("tiresize"),
     },
 
     {
+      dataIndex: "make",
+      key: "make",
+      title: "Дугуй үйлдвэрлэгч",
+      status: false,
+    },
+    {
+      dataIndex: "modal",
+      key: "modal",
+      title: "Дугуйны загвар",
+      status: false,
+    },
+    {
+      dataIndex: "use",
+      key: "use",
+      title: "Дугуйны төлөв",
+      status: false,
+    },
+    {
+      dataIndex: "season",
+      key: "season",
+      title: "Дугуйны улирал",
+      status: false,
+    },
+    {
       dataIndex: "diameter",
       key: "diameter",
-      title: "Диаметр",
+      title: "Обудын диаметр",
       status: true,
-      ...getColumnSearchProps("diameter"),
-      sorter: (a, b) => handleSort(),
     },
     {
       dataIndex: "width",
       key: "width",
-      title: "Өргөн",
-      status: true,
-      ...getColumnSearchProps("width"),
-      sorter: (a, b) => handleSort(),
+      title: "Обудын өргөн",
+      status: false,
     },
     {
       dataIndex: "boltPattern",
       key: "boltPattern",
-      title: "Болтны нүх",
+      title: "Обудын болтны зай",
       status: true,
-      ...getColumnSearchProps("boltPattern"),
-      sorter: (a, b) => handleSort(),
     },
-    {
-      dataIndex: "inSet",
-      key: "inSet",
-      title: "Дотогшоо",
-      status: false,
-      ...getColumnSearchProps("inSet"),
-      sorter: (a, b) => handleSort(),
-    },
-    {
-      dataIndex: "offSet",
-      key: "offSet",
-      title: "Гадагшаа",
-      status: false,
-      ...getColumnSearchProps("offSet"),
-      sorter: (a, b) => handleSort(),
-    },
-
     {
       dataIndex: "rim",
       key: "rim",
-      title: "RIM Хэмжээ",
+      title: "RIM",
       status: true,
-      ...getColumnSearchProps("rim"),
-      sorter: (a, b) => handleSort(),
     },
-
+    {
+      dataIndex: "centerBore",
+      key: "centerBore",
+      title: "Обудын голын диаметр",
+      status: false,
+    },
+    {
+      dataIndex: "views",
+      key: "views",
+      title: "Үзсэн",
+      status: true,
+    },
     {
       dataIndex: "price",
       key: "price",
       title: "Үнэ",
       status: true,
-      ...getColumnSearchProps("price"),
-      sorter: (a, b) => handleSort(),
     },
-
     {
       dataIndex: "discount",
       key: "discount",
       title: "Хямдарсан үнэ",
       status: false,
-      ...getColumnSearchProps("discount"),
-      sorter: (a, b) => handleSort(),
     },
-
-    {
-      dataIndex: "threadSize",
-      key: "threadSize",
-      title: "Болтны нүхний хэмжээ",
-      status: false,
-      ...getColumnSearchProps("threadSize"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "centerBore",
-      key: "centerBore",
-      title: "Голын нүхний диаметр",
-      status: false,
-      ...getColumnSearchProps("centerBore"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "setOf",
-      key: "setOf",
-      title: "Багц",
-      status: true,
-      ...getColumnSearchProps("setOf"),
-      sorter: (a, b) => handleSort(),
-    },
-
-    {
-      dataIndex: "views",
-      key: "views",
-      title: "Нийт үзсэн",
-      status: true,
-      ...getColumnSearchProps("views"),
-      sorter: (a, b) => handleSort(),
-    },
-
     {
       dataIndex: "createUser",
       key: "createUser",
@@ -391,12 +349,12 @@ const Wheel = (props) => {
     if (selectedRowKeys.length != 1) {
       toastControl("error", "Нэг өгөгдөл сонгоно уу");
     } else {
-      history.push(`/wheel/edit/${selectedRowKeys[0]}`);
+      history.push(`/set/edit/${selectedRowKeys[0]}`);
     }
   };
 
   const handleDelete = () => {
-    props.deleteMultWheel(selectedRowKeys);
+    props.deleteMultSetproduct(selectedRowKeys);
   };
 
   // -- MODAL STATE
@@ -431,7 +389,7 @@ const Wheel = (props) => {
   useEffect(() => {
     if (querys) {
       const query = queryBuild();
-      props.loadWheel(query);
+      props.loadSetproduct(query);
     }
   }, [querys]);
 
@@ -443,7 +401,7 @@ const Wheel = (props) => {
   useEffect(() => {
     const select = [];
     select.push(filterdColumns.map((col) => col.dataIndex));
-    setQuerys((bquery) => ({ ...bquery, select: select }));
+    setQuerys((bquery) => ({ ...bquery }));
   }, [filterdColumns]);
 
   // -- LOADING
@@ -453,18 +411,21 @@ const Wheel = (props) => {
 
   // -- NEWS GET DONE EFFECT
   useEffect(() => {
-    if (props.wheels) {
+    if (props.setProducts) {
       const refData = [];
+      // console.log(props.setProducts);
 
-      props.wheels.length > 0 &&
-        props.wheels.map((el) => {
+      props.setProducts.length > 0 &&
+        props.setProducts.map((el) => {
           const key = el._id;
           delete el._id;
+
           el.status = el.status == true ? "Зарагдаагүй" : "Зарагдсан";
           el.star = el.star == true ? "Онцгойлсон" : "Энгийн";
           el.isNew = el.isNew == true ? "Шинэ" : "Хуучин";
           el.isDiscount =
             el.isDiscount == true ? "Хөнгөлөлтэй" : "Хөнгөлөлтгүй";
+
           el.createUser = el.createUser && el.createUser.firstName;
           el.updateUser = el.updateUser && el.updateUser.firstName;
           el.price = new Intl.NumberFormat().format(el.price) + "₮";
@@ -476,8 +437,25 @@ const Wheel = (props) => {
             .utcOffset("+0800")
             .format("YYYY-MM-DD HH:mm:ss");
 
-          el.wheelCategories = el.wheelCategories.map((el) => el.name);
+          el.setProductCategories = el.setProductCategories.map(
+            (el) => el.name
+          );
 
+          el.make = el.tire.make.name;
+          el.modal = el.tire.modal.name;
+
+          el.use = el.tire.use;
+          el.season = el.tire.season;
+          el.tiresize =
+            el.tire.width + "/" + el.tire.height + "R" + el.tire.diameter;
+
+          el.diameter = el.wheel.diameter;
+          el.width = el.wheel.width;
+          el.boltPattern = el.wheel.boltPattern;
+          el.rim = el.wheel.rim;
+          el.threadSize = el.wheel.threadSize;
+          el.centerBore = el.wheel.centerBore;
+          el.pictures = el.pictures && base.cdnUrl + el.pictures[0];
           refData.push({
             dataIndex: key,
             key,
@@ -487,7 +465,7 @@ const Wheel = (props) => {
 
       setData(refData);
     }
-  }, [props.wheels]);
+  }, [props.setProducts]);
 
   // Start moment
   useEffect(() => {
@@ -507,7 +485,7 @@ const Wheel = (props) => {
   // -- INIT
   const init = () => {
     const query = queryBuild();
-    props.loadWheel(`${query}`);
+    props.loadSetproduct(`${query}`);
   };
 
   const clear = () => {};
@@ -612,7 +590,7 @@ const Wheel = (props) => {
       }
       case "edit": {
         if (selectedRowKeys && selectedRowKeys.length === 1) {
-          props.history.replace("/wheel/edit/" + selectedRowKeys[0]);
+          props.history.replace("/setProduct/edit/" + selectedRowKeys[0]);
         } else {
           toastControl("error", "Нэг өгөгдөл сонгоно уу");
         }
@@ -659,7 +637,7 @@ const Wheel = (props) => {
   // -- CONVER JSON  TO EXCEL
   const exportExcel = async () => {
     const query = queryBuild();
-    const response = await axios.get("wheel/excel?" + query);
+    const response = await axios.get("setProduct/excel?" + query);
     let excelData = [];
     if (response) {
       const data = response.data.data;
@@ -742,7 +720,7 @@ const Wheel = (props) => {
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Обуд" />
+        <PageTitle name="Дугуй, обудууд" />
         <div className="page-sub-menu">
           <Menus />
         </div>
@@ -751,14 +729,14 @@ const Wheel = (props) => {
           <div className="container-fluid">
             <div className="card datatable-card">
               <div className="card-header">
-                <h3 className="card-title">Бүх обудууд</h3>
+                <h3 className="card-title">Бүх дугуй, обудууд</h3>
               </div>
               <div className="card-body datatable-card-body">
                 <div className="datatable-header-tools">
                   <div className="datatable-actions">
                     <button
                       className="datatable-action add-bg"
-                      onClick={() => history.push(`/wheel/add`)}
+                      onClick={() => history.push(`/set/add`)}
                     >
                       <i className="fa fa-plus"></i> Нэмэх
                     </button>
@@ -902,20 +880,20 @@ const Wheel = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    loading: state.wheelReducer.loading,
-    success: state.wheelReducer.success,
-    error: state.wheelReducer.error,
-    wheels: state.wheelReducer.wheels,
-    pagination: state.wheelReducer.paginationLast,
+    loading: state.setOfReducer.loading,
+    success: state.setOfReducer.success,
+    error: state.setOfReducer.error,
+    setProducts: state.setOfReducer.setProducts,
+    pagination: state.setOfReducer.paginationLast,
   };
 };
 
 const mapDispatchToProp = (dispatch) => {
   return {
-    loadWheel: (query) => dispatch(actions.loadWheel(query)),
-    deleteMultWheel: (ids) => dispatch(actions.deleteMultWheel(ids)),
+    loadSetproduct: (query) => dispatch(actions.loadSetproduct(query)),
+    deleteMultSetproduct: (ids) => dispatch(actions.deleteMultSetproduct(ids)),
     clear: () => dispatch(actions.clear()),
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProp)(Wheel);
+export default connect(mapStateToProps, mapDispatchToProp)(SetOf);

@@ -4,17 +4,15 @@ import {
   Input,
   Button,
   Switch,
-  Upload,
-  message,
-  Select,
-  InputNumber,
-  DatePicker,
-  AutoComplete,
   Tree,
+  Upload,
+  Space,
+  Radio,
+  message,
+  InputNumber,
 } from "antd";
 import { connect } from "react-redux";
 import { Editor } from "@tinymce/tinymce-react";
-import dayjs from "dayjs";
 
 //Components
 import PageTitle from "../../../Components/PageTitle";
@@ -22,22 +20,17 @@ import { InboxOutlined } from "@ant-design/icons";
 import Loader from "../../../Components/Generals/Loader";
 
 //Actions
-import { tinymceAddPhoto } from "../../../redux/actions/imageActions";
+import * as actions from "../../../redux/actions/productActions";
 import {
-  loadTireCategories,
+  loadProductCategories,
   clear as clearCat,
-} from "../../../redux/actions/tireCategoryActions";
-
-import { loadTireMake } from "../../../redux/actions/tireMakeActions";
-import { loadTireModal } from "../../../redux/actions/tireModalActions";
-import * as actions from "../../../redux/actions/tireActions";
-
+} from "../../../redux/actions/productCategoriesActions";
 // Lib
 import base from "../../../base";
 import axios from "../../../axios-base";
 import { toastControl } from "src/lib/toasControl";
-import { convertFromdata } from "../../../lib/handleFunction";
 import { menuGenerateData } from "../../../lib/menuGenerate";
+import { convertFromdata } from "../../../lib/handleFunction";
 
 const requiredRule = {
   required: true,
@@ -46,47 +39,44 @@ const requiredRule = {
 
 const { Dragger } = Upload;
 
-const Add = (props) => {
+const Edit = (props) => {
   const [form] = Form.useForm();
   const [pictures, setPictures] = useState([]);
+  const [setProgress] = useState(0);
   const [deleteFiles, setDeleteFiles] = useState([]);
-  const [choiseDate, setChoiseDate] = useState();
-  const [autoComplete, setAutoComplete] = useState(null);
-  const [gData, setGData] = useState([]);
+
+  const [loading, setLoading] = useState({
+    visible: false,
+    message: "",
+  });
   const [expandedKeys, setExpandedKeys] = useState([]);
   const [checkedKeys, setCheckedKeys] = useState([]);
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [autoExpandParent, setAutoExpandParent] = useState(true);
+  const [gData, setGData] = useState([]);
 
   const [checkedRadio, setCheckedRadio] = useState({
     status: true,
     star: false,
     isDiscount: false,
-  });
-
-  const [setProgress] = useState(0);
-  const [loading, setLoading] = useState({
-    visible: false,
-    message: "",
+    isNew: false,
   });
 
   // FUNCTIONS
   const init = () => {
-    props.loadTireMake();
-    props.loadTireModal();
-    props.loadTireCategories();
-    props.getTire(props.match.params.id);
+    props.getProduct(props.match.params.id);
+    props.loadProductCategories();
   };
 
   const clear = () => {
     props.clear();
     form.resetFields();
-    setPictures([]);
     props.clearCat();
     setGData([]);
     setExpandedKeys([]);
     setSelectedKeys([]);
     setCheckedKeys([]);
+    setPictures([]);
     setLoading(false);
   };
 
@@ -111,39 +101,47 @@ const Add = (props) => {
       ...values,
       star: values.star || false,
       isDiscount: values.isDiscount || false,
-      tireCategories: [...checkedKeys],
+      isNew: values.isNew || false,
+      productCategories: [...checkedKeys],
     };
 
-    if (data.tireCategories.length === 0) {
-      data.tireCategories = "";
+    if (data.productCategories.length === 0) {
+      data.productCategories = "";
     }
 
-    data.year = choiseDate;
-    if (status === "draft") {
-      data.status = false;
-    }
-
+    if (status === "draft") data.status = false;
     const sendData = convertFromdata(data);
-
-    props.updateTire(props.match.params.id, sendData);
-  };
-
-  const handleDate = (date, dateString) => {
-    setChoiseDate(dateString);
+    props.updateProduct(props.match.params.id, sendData);
   };
 
   const handleRemove = (stType, file) => {
-    let index;
-    let deleteFile;
-    let list;
-
-    index = pictures.indexOf(file);
-    deleteFile = pictures[index].name;
-    list = pictures.slice();
+    let index = pictures.indexOf(file);
+    let deleteFile = pictures[index].name;
+    let list = pictures.slice();
     list.splice(index, 1);
     setPictures(list);
 
     setDeleteFiles((bf) => [...bf, deleteFile]);
+  };
+
+  // -- TREE FUNCTIONS
+  const onExpand = (expandedKeysValue) => {
+    setExpandedKeys(expandedKeysValue);
+    setAutoExpandParent(false);
+  };
+
+  const onCheck = (checkedKeysValue) => {
+    // console.log(checkedKeysValue);
+    setCheckedKeys(checkedKeysValue);
+  };
+
+  const onSelect = (selectedKeysValue, info) => {
+    // console.log("onSelect", info);
+    setSelectedKeys(selectedKeysValue);
+  };
+
+  const handleRadio = (value, type) => {
+    setCheckedRadio((bc) => ({ ...bc, [type]: value }));
   };
 
   // CONFIGS
@@ -164,6 +162,7 @@ const Add = (props) => {
     };
 
     fmData.append("file", file);
+
     try {
       const res = await axios.post("/imgupload", fmData, config);
       const img = {
@@ -191,38 +190,46 @@ const Add = (props) => {
     listType: "picture",
   };
 
-  // -- TREE FUNCTIONS
-  const onExpand = (expandedKeysValue) => {
-    setExpandedKeys(expandedKeysValue);
-    setAutoExpandParent(false);
-  };
-
-  const onCheck = (checkedKeysValue) => {
-    // console.log(checkedKeysValue);
-    setCheckedKeys(checkedKeysValue);
-  };
-
-  const onSelect = (selectedKeysValue, info) => {
-    // console.log("onSelect", info);
-    setSelectedKeys(selectedKeysValue);
-  };
-
   // USEEFFECT
   useEffect(() => {
-    init();
-    const fetchData = async () => {
-      const result = await axios.get("/tires/groups");
-      if (result && result.data) {
-        setAutoComplete(() => ({ ...result.data }));
-      } else if (result && result.error) {
-        toastControl("error", result.error);
-      }
-    };
+    const fetchData = async () => {};
 
     fetchData().catch((err) => console.log(err));
+    init();
 
     return () => clear();
   }, []);
+
+  useEffect(() => {
+    if (props.product) {
+      form.setFieldsValue({ ...props.product });
+
+      setCheckedRadio({
+        status: props.product.status,
+        star: props.product.star,
+        isDiscount: props.product.isDiscount,
+        isNew: props.product.isNew,
+      });
+
+      if (
+        props.product.productCategories &&
+        props.product.productCategories.length > 0
+      ) {
+        setCheckedKeys(() => {
+          return props.product.productCategories.map((cat) => cat._id);
+        });
+      }
+
+      props.product.pictures &&
+        props.product.pictures.length > 0 &&
+        setPictures(
+          props.product.pictures.map((img) => ({
+            name: img,
+            url: `${base.cdnUrl}${img}`,
+          }))
+        );
+    }
+  }, [props.product]);
 
   // Ямар нэгэн алдаа эсвэл амжилттай үйлдэл хийгдвэл энд useEffect барьж аваад TOAST харуулна
   useEffect(() => {
@@ -232,37 +239,9 @@ const Add = (props) => {
   useEffect(() => {
     if (props.success) {
       toastControl("success", props.success);
-      setTimeout(() => props.history.replace("/tire"), 2000);
+      setTimeout(() => props.history.replace("/product"), 2000);
     }
   }, [props.success]);
-
-  useEffect(() => {
-    if (props.tire) {
-      form.setFieldsValue({ ...props.tire });
-      setCheckedRadio({
-        status: props.tire.status,
-        star: props.tire.star,
-        isDiscount: props.tire.isDiscount,
-      });
-
-      setChoiseDate(props.tire.year);
-
-      if (props.tire.tireCategories && props.tire.tireCategories.length > 0) {
-        setCheckedKeys(() => {
-          return props.tire.tireCategories.map((cat) => cat._id);
-        });
-      }
-
-      props.tire.pictures &&
-        props.tire.pictures.length > 0 &&
-        setPictures(
-          props.tire.pictures.map((img) => ({
-            name: img,
-            url: `${base.cdnUrl}${img}`,
-          }))
-        );
-    }
-  }, [props.tire]);
 
   useEffect(() => {
     const data = menuGenerateData(props.categories);
@@ -272,7 +251,7 @@ const Add = (props) => {
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Дугуй шинэчлэх" />
+        <PageTitle name="Сэлбэг шинэчлэх" />
         <div className="page-sub-menu"></div>
         <div className="content">
           <Loader show={loading.visible}> {loading.message} </Loader>
@@ -285,206 +264,46 @@ const Add = (props) => {
                       <div className="row">
                         <div className="col-12">
                           <Form.Item
-                            label="Гарчиг"
+                            label="Сэлбэгний нэр"
                             name="name"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <Input placeholder="Гарчиг оруулна уу" />
+                            <Input placeholder="Сэлбэгний нэр оруулна уу" />
                           </Form.Item>
                         </div>
                         <div className="col-12">
-                          <Form.Item
-                            label="Үйлдвэрлэгч"
-                            name="make"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <Select
-                              options={
-                                props.tiremakes &&
-                                props.tiremakes.map((make) => {
-                                  return {
-                                    value: make._id,
-                                    label: make.name,
-                                  };
-                                })
-                              }
-                              placeholder="Үйлдвэрлэгчидээс сонгох"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-12">
-                          <Form.Item label="Загвар" name="modal" hasFeedback>
-                            <Select
-                              options={
-                                props.tiremodals &&
-                                props.tiremodals.map((modal) => {
-                                  return {
-                                    value: modal._id,
-                                    label: modal.name,
-                                  };
-                                })
-                              }
-                              placeholder="Загвараас сонгох"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Өргөн"
-                            name="width"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <AutoComplete
-                              style={{ width: "100%" }}
-                              options={
-                                autoComplete &&
-                                autoComplete["width"] &&
-                                autoComplete["width"].map((el) => ({
-                                  value: el.name,
-                                }))
-                              }
-                              placeholder="Өргөн оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Хажуугийн талын хэмжээ"
-                            name="height"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <AutoComplete
-                              style={{ width: "100%" }}
-                              options={
-                                autoComplete &&
-                                autoComplete["height"] &&
-                                autoComplete["height"].map((el) => ({
-                                  value: el.name,
-                                }))
-                              }
-                              placeholder="Хажуугийн талын хэмжээ оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Диаметрын хэмжээ"
-                            name="diameter"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <AutoComplete
-                              options={
-                                autoComplete &&
-                                autoComplete["diameter"] &&
-                                autoComplete["diameter"].map((el) => ({
-                                  value: el.name,
-                                }))
-                              }
-                              style={{ width: "100%" }}
-                              placeholder="Диаметрын хэмжээ оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Үйлдвэрлэгдсэн огноо"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <DatePicker
-                              style={{ width: "100%" }}
-                              picker="year"
-                              placeholder="Огноо сонгоно уу"
-                              defaultValue={dayjs(choiseDate)}
-                              onChange={handleDate}
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Ашиглалтын хувь"
-                            name="use"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <InputNumber
-                              style={{ width: "100%" }}
-                              placeholder="Ашиглалтын хувь оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Улилрал"
-                            name="season"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <Select
-                              options={[
-                                {
-                                  value: "summer",
-                                  label: "Зуны",
-                                },
-                                {
-                                  value: "winter",
-                                  label: "Өвлийн",
-                                },
-                                {
-                                  value: "allin",
-                                  label: "4 Улилралын",
-                                },
-                              ]}
-                              placeholder="Загвараас сонгох"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Үнэ"
-                            name="price"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <InputNumber
-                              style={{ width: "100%" }}
-                              placeholder="Үнэ оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        {checkedRadio.isDiscount === true && (
-                          <div className="col-4">
-                            <Form.Item
-                              label="Хямдарсан үнэ"
-                              name="discount"
-                              rules={[requiredRule]}
-                              hasFeedback
-                            >
-                              <InputNumber
-                                style={{ width: "100%" }}
-                                placeholder="Хямдарсан үнэ оруулна уу"
-                              />
-                            </Form.Item>
-                          </div>
-                        )}
-                        <div className="col-4">
                           <Form.Item
                             label="Багц"
                             name="setOf"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <InputNumber
-                              style={{ width: "100%" }}
-                              placeholder="Багц оруулна уу"
-                            />
+                            <Input placeholder="Багцална уу" />
                           </Form.Item>
                         </div>
+                        <div className="col-12">
+                          <Form.Item
+                            label="Үнэ"
+                            name="price"
+                            rules={[requiredRule]}
+                            hasFeedback
+                          >
+                            <Input placeholder="Үнэ оруулна уу" />
+                          </Form.Item>
+                        </div>
+                        {checkedRadio.isDiscount == true && (
+                          <div className="col-12">
+                            <Form.Item
+                              label="Хөнгөлөлтэй үнэ"
+                              name="discount"
+                              rules={[requiredRule]}
+                              hasFeedback
+                            >
+                              <Input placeholder="Хөнгөлөлтэй үнэ оруулна уу" />
+                            </Form.Item>
+                          </div>
+                        )}
 
                         <div className="col-12">
                           <Form.Item
@@ -501,16 +320,16 @@ const Add = (props) => {
                                 height: 300,
                                 menubar: false,
                                 plugins: [
-                                  "advlist textcolor autolink lists link image charmap print preview anchor tinydrive ",
+                                  "advlist autolink lists link image  tinydrive charmap print preview anchor",
                                   "searchreplace visualblocks code fullscreen",
                                   "insertdatetime media table paste code help wordcount image media  code  table  ",
                                 ],
                                 toolbar:
-                                  "mybutton | addPdf |  image | undo redo | fontselect fontsizeselect formatselect blockquote  | bold italic forecolor  backcolor | \
+                                  "mybutton image | undo redo | fontselect fontsizeselect formatselect blockquote  | bold italic backcolor | \
                         alignleft aligncenter alignright alignjustify | \
                         bullist numlist outdent indent | removeformat | help | link  | quickbars | media | code | tableprops tabledelete | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol",
-                                file_picker_types: "image",
                                 tinydrive_token_provider: `${base.apiUrl}users/jwt`,
+                                file_picker_types: "image",
                                 automatic_uploads: false,
                                 setup: (editor) => {
                                   editor.ui.registry.addButton("mybutton", {
@@ -536,37 +355,6 @@ const Add = (props) => {
                                           `${base.cdnUrl}` + res.data.data;
                                         editor.insertContent(
                                           `<a href="${url}"> ${res.data.data} </a>`
-                                        );
-                                        setLoading({
-                                          visible: false,
-                                        });
-                                      };
-                                      input.click();
-                                    },
-                                  });
-                                  editor.ui.registry.addButton("addPdf", {
-                                    text: "PDF Файл оруулах",
-                                    onAction: () => {
-                                      let input =
-                                        document.createElement("input");
-                                      input.setAttribute("type", "file");
-                                      input.setAttribute("accept", ".pdf");
-                                      input.onchange = async function () {
-                                        let file = this.files[0];
-                                        const fData = new FormData();
-                                        fData.append("file", file);
-                                        setLoading({
-                                          visible: true,
-                                          message:
-                                            "Түр хүлээнэ үү файл хуулж байна",
-                                        });
-                                        const res = await axios.post(
-                                          "/file",
-                                          fData
-                                        );
-                                        const url = base.cdnUrl + res.data.data;
-                                        editor.insertContent(
-                                          `<iframe src="${url}" style="width:100%; min-height: 500px"> </iframe>`
                                         );
                                         setLoading({
                                           visible: false,
@@ -615,12 +403,11 @@ const Add = (props) => {
                     <div className="card-body">
                       <div className="row">
                         <div className="col-12">
-                          <Form.Item label="Зарагдсан эсэх" name="status">
+                          <Form.Item label="Зарсан эсэх" name="status">
                             <Switch
+                              size="medium"
                               checkedChildren="Зарагдаагүй"
                               unCheckedChildren="Зарагдсан"
-                              size="medium"
-                              defaultChecked
                               checked={checkedRadio.status}
                               onChange={(checked) =>
                                 setCheckedRadio((bc) => ({
@@ -645,6 +432,7 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
+
                         <div className="col-12">
                           <Form.Item label="Хямдрал зарлах" name="isDiscount">
                             <Switch
@@ -654,6 +442,22 @@ const Add = (props) => {
                                 setCheckedRadio((bc) => ({
                                   ...bc,
                                   isDiscount: checked,
+                                }))
+                              }
+                            />
+                          </Form.Item>
+                        </div>
+                        <div className="col-12">
+                          <Form.Item label="Шинэ хуучин эсэх" name="isNew">
+                            <Switch
+                              checkedChildren="Шинэ"
+                              unCheckedChildren="Хуучин"
+                              size="medium"
+                              checked={checkedRadio.isNew}
+                              onChange={(checked) =>
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  isNew: checked,
                                 }))
                               }
                             />
@@ -756,27 +560,22 @@ const Add = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    success: state.tireReducer.success,
-    error: state.tireReducer.error,
-    loading: state.tireReducer.loading,
-    tiremakes: state.tireMakeReducer.tiremakes,
-    tiremodals: state.tireModalReducer.tiremodals,
-    tire: state.tireReducer.tire,
-    categories: state.tireCategoryReducer.categories,
+    success: state.productReducer.success,
+    error: state.productReducer.error,
+    loading: state.productReducer.loading,
+    product: state.productReducer.product,
+    categories: state.productCategoryReducer.categories,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    tinymceAddPhoto: (file) => dispatch(tinymceAddPhoto(file)),
-    loadTireMake: () => dispatch(loadTireMake()),
-    loadTireModal: () => dispatch(loadTireModal()),
-    loadTireCategories: () => dispatch(loadTireCategories()),
-    updateTire: (id, data) => dispatch(actions.updateTire(id, data)),
-    getTire: (id) => dispatch(actions.getTire(id)),
+    updateProduct: (id, data) => dispatch(actions.updateProduct(id, data)),
+    loadProductCategories: () => dispatch(loadProductCategories()),
+    getProduct: (id) => dispatch(actions.getProduct(id)),
     clear: () => dispatch(actions.clear()),
     clearCat: () => dispatch(clearCat()),
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Add);
+export default connect(mapStateToProps, mapDispatchToProps)(Edit);

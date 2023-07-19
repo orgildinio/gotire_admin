@@ -22,6 +22,10 @@ import Loader from "../../../Components/Generals/Loader";
 
 //Actions
 import * as actions from "../../../redux/actions/wheelActions";
+import {
+  loadWheelCategories,
+  clear as clearCat,
+} from "../../../redux/actions/wheelCategoryActions";
 
 // Lib
 import base from "../../../base";
@@ -42,6 +46,11 @@ const Add = (props) => {
   const [pictures, setPictures] = useState([]);
   const [setProgress] = useState(0);
   const [autoComplete, setAutoComplete] = useState(null);
+  const [expandedKeys, setExpandedKeys] = useState([]);
+  const [checkedKeys, setCheckedKeys] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+  const [autoExpandParent, setAutoExpandParent] = useState(true);
+  const [gData, setGData] = useState([]);
   const [loading, setLoading] = useState({
     visible: false,
     message: "",
@@ -51,16 +60,40 @@ const Add = (props) => {
     status: true,
     star: false,
     isDiscount: false,
+    isNew: false,
   });
 
   // FUNCTIONS
-  const init = () => {};
+  const init = () => {
+    props.loadWheelCategories();
+  };
 
   const clear = () => {
     props.clear();
     form.resetFields();
+    props.clearCat();
     setPictures([]);
+    setExpandedKeys([]);
+    setSelectedKeys([]);
+    setCheckedKeys([]);
+    setGData([]);
     setLoading(false);
+  };
+
+  // -- TREE FUNCTIONS
+  const onExpand = (expandedKeysValue) => {
+    setExpandedKeys(expandedKeysValue);
+    setAutoExpandParent(false);
+  };
+
+  const onCheck = (checkedKeysValue) => {
+    // console.log(checkedKeysValue);
+    setCheckedKeys(checkedKeysValue);
+  };
+
+  const onSelect = (selectedKeysValue, info) => {
+    // console.log("onSelect", info);
+    setSelectedKeys(selectedKeysValue);
   };
 
   const handleChange = (event) => {
@@ -73,8 +106,14 @@ const Add = (props) => {
     const data = {
       ...values,
       star: values.star || false,
+      isNew: values.isNew || false,
       isDiscount: values.isDiscount || false,
+      wheelCategories: [...checkedKeys],
     };
+
+    if (data.wheelCategories.length === 0) {
+      delete data.wheelCategories;
+    }
 
     if (status === "draft") data.status = false;
     const sendData = convertFromdata(data);
@@ -161,6 +200,11 @@ const Add = (props) => {
     return () => clear();
   }, []);
 
+  useEffect(() => {
+    const data = menuGenerateData(props.categories);
+    setGData(data);
+  }, [props.categories]);
+
   // Ямар нэгэн алдаа эсвэл амжилттай үйлдэл хийгдвэл энд useEffect барьж аваад TOAST харуулна
   useEffect(() => {
     toastControl("error", props.error);
@@ -189,17 +233,17 @@ const Add = (props) => {
                       <div className="row">
                         <div className="col-12">
                           <Form.Item
-                            label="Обудын гарчиг"
+                            label="Обудын нэр"
                             name="name"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <Input placeholder="Обудын гарчиг оруулна уу" />
+                            <Input placeholder="Обудын нэр оруулна уу" />
                           </Form.Item>
                         </div>
                         <div className="col-12">
                           <Form.Item
-                            label="Багц"
+                            label="Тоо ширхэг"
                             name="setOf"
                             rules={[requiredRule]}
                             hasFeedback
@@ -231,7 +275,7 @@ const Add = (props) => {
                         )}
                         <div className="col-4">
                           <Form.Item
-                            label="Диаметр"
+                            label="Обудын диаметр"
                             name="diameter"
                             rules={[requiredRule]}
                             hasFeedback
@@ -251,7 +295,7 @@ const Add = (props) => {
                         </div>
                         <div className="col-4">
                           <Form.Item
-                            label="Өргөн jj оруулна уу"
+                            label="Өргөн (J) оруулна уу"
                             name="width"
                             rules={[requiredRule]}
                             hasFeedback
@@ -316,19 +360,10 @@ const Add = (props) => {
                             <Input placeholder="Дотогшоо суултын хэмжээг оруулна уу" />
                           </Form.Item>
                         </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Гадагшаа offset хэмжээ"
-                            name="offSet"
-                            hasFeedback
-                          >
-                            <Input placeholder="Гадагшаа offset хэмжээг оруулна уу" />
-                          </Form.Item>
-                        </div>
 
                         <div className="col-4">
                           <Form.Item
-                            label="Болтны нүхний хэмжээ"
+                            label="Болтны хэмжээ"
                             name="threadSize"
                             hasFeedback
                           >
@@ -363,10 +398,9 @@ const Add = (props) => {
                             rules={[requiredRule]}
                           >
                             <Editor
-                              style={{ width: "100%" }}
                               apiKey="2nubq7tdhudthiy6wfb88xgs36os4z3f4tbtscdayg10vo1o"
                               init={{
-                                width: 300,
+                                height: 300,
                                 menubar: false,
                                 plugins: [
                                   "advlist textcolor autolink lists link image charmap print preview anchor tinydrive ",
@@ -526,6 +560,22 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
+                        <div className="col-12">
+                          <Form.Item label="Шинэ хуучин эсэх" name="isNew">
+                            <Switch
+                              checkedChildren="Шинэ"
+                              unCheckedChildren="Хуучин"
+                              size="medium"
+                              checked={checkedRadio.isNew}
+                              onChange={(checked) =>
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  isNew: checked,
+                                }))
+                              }
+                            />
+                          </Form.Item>
+                        </div>
                       </div>
                     </div>
                     <div className="card-footer">
@@ -572,6 +622,26 @@ const Add = (props) => {
                   </div>
                   <div className="card">
                     <div class="card-header">
+                      <h3 class="card-title">АНГИЛАЛ</h3>
+                    </div>
+                    <div className="card-body">
+                      <Form.Item name="categories">
+                        <Tree
+                          checkable
+                          onExpand={onExpand}
+                          expandedKeys={expandedKeys}
+                          autoExpandParent={autoExpandParent}
+                          onCheck={onCheck}
+                          checkedKeys={checkedKeys}
+                          onSelect={onSelect}
+                          selectedKeys={selectedKeys}
+                          treeData={gData}
+                        />
+                      </Form.Item>
+                    </div>
+                  </div>
+                  <div className="card">
+                    <div class="card-header">
                       <h3 class="card-title">Зураг оруулах</h3>
                     </div>
                     <div className="card-body">
@@ -606,13 +676,16 @@ const mapStateToProps = (state) => {
     success: state.wheelReducer.success,
     error: state.wheelReducer.error,
     loading: state.wheelReducer.loading,
+    categories: state.wheelCategoryReducer.categories,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
+    loadWheelCategories: () => dispatch(loadWheelCategories()),
     saveWheel: (data) => dispatch(actions.saveWheel(data)),
     clear: () => dispatch(actions.clear()),
+    clearCat: () => dispatch(clearCat()),
   };
 };
 

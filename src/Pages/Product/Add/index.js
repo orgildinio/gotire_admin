@@ -4,17 +4,16 @@ import {
   Input,
   Button,
   Switch,
-  Upload,
-  message,
-  Select,
-  InputNumber,
-  DatePicker,
-  AutoComplete,
   Tree,
+  Upload,
+  Space,
+  Radio,
+  message,
+  InputNumber,
+  AutoComplete,
 } from "antd";
 import { connect } from "react-redux";
 import { Editor } from "@tinymce/tinymce-react";
-import dayjs from "dayjs";
 
 //Components
 import PageTitle from "../../../Components/PageTitle";
@@ -22,22 +21,18 @@ import { InboxOutlined } from "@ant-design/icons";
 import Loader from "../../../Components/Generals/Loader";
 
 //Actions
-import { tinymceAddPhoto } from "../../../redux/actions/imageActions";
+import * as actions from "../../../redux/actions/productActions";
 import {
-  loadTireCategories,
+  loadProductCategories,
   clear as clearCat,
-} from "../../../redux/actions/tireCategoryActions";
-
-import { loadTireMake } from "../../../redux/actions/tireMakeActions";
-import { loadTireModal } from "../../../redux/actions/tireModalActions";
-import * as actions from "../../../redux/actions/tireActions";
+} from "../../../redux/actions/productCategoriesActions";
 
 // Lib
 import base from "../../../base";
 import axios from "../../../axios-base";
 import { toastControl } from "src/lib/toasControl";
-import { convertFromdata } from "../../../lib/handleFunction";
 import { menuGenerateData } from "../../../lib/menuGenerate";
+import { convertFromdata } from "../../../lib/handleFunction";
 
 const requiredRule = {
   required: true,
@@ -49,101 +44,96 @@ const { Dragger } = Upload;
 const Add = (props) => {
   const [form] = Form.useForm();
   const [pictures, setPictures] = useState([]);
-  const [deleteFiles, setDeleteFiles] = useState([]);
-  const [choiseDate, setChoiseDate] = useState();
-  const [autoComplete, setAutoComplete] = useState(null);
-  const [gData, setGData] = useState([]);
+  const [setProgress] = useState(0);
   const [expandedKeys, setExpandedKeys] = useState([]);
   const [checkedKeys, setCheckedKeys] = useState([]);
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [autoExpandParent, setAutoExpandParent] = useState(true);
-
-  const [checkedRadio, setCheckedRadio] = useState({
-    status: true,
-    star: false,
-    isDiscount: false,
-  });
-
-  const [setProgress] = useState(0);
+  const [gData, setGData] = useState([]);
   const [loading, setLoading] = useState({
     visible: false,
     message: "",
   });
 
+  const [checkedRadio, setCheckedRadio] = useState({
+    status: true,
+    star: false,
+    isDiscount: false,
+    isNew: false,
+  });
+
   // FUNCTIONS
   const init = () => {
-    props.loadTireMake();
-    props.loadTireModal();
-    props.loadTireCategories();
-    props.getTire(props.match.params.id);
+    props.loadProductCategories();
   };
 
   const clear = () => {
     props.clear();
     form.resetFields();
-    setPictures([]);
     props.clearCat();
-    setGData([]);
+    setPictures([]);
     setExpandedKeys([]);
     setSelectedKeys([]);
     setCheckedKeys([]);
+    setGData([]);
     setLoading(false);
+  };
+
+  // -- TREE FUNCTIONS
+  const onExpand = (expandedKeysValue) => {
+    setExpandedKeys(expandedKeysValue);
+    setAutoExpandParent(false);
+  };
+
+  const onCheck = (checkedKeysValue) => {
+    // console.log(checkedKeysValue);
+    setCheckedKeys(checkedKeysValue);
+  };
+
+  const onSelect = (selectedKeysValue, info) => {
+    // console.log("onSelect", info);
+    setSelectedKeys(selectedKeysValue);
   };
 
   const handleChange = (event) => {
     form.setFieldsValue({ details: event });
   };
 
-  const handleEdit = (values, status = null) => {
-    if (pictures.length > 0) {
-      values.pictures = pictures.map((el) => el.name);
-    } else {
-      values.pictures = [];
-    }
-
-    if (deleteFiles && deleteFiles.length > 0) {
-      deleteFiles.map(async (deleteFile) => {
-        await axios.delete("/imgupload", { data: { file: deleteFile } });
-      });
-    }
+  const handleAdd = (values, status = null) => {
+    if (pictures.length > 0) values.pictures = pictures.map((el) => el.name);
 
     const data = {
       ...values,
       star: values.star || false,
+      isNew: values.isNew || false,
       isDiscount: values.isDiscount || false,
-      tireCategories: [...checkedKeys],
+      productCategories: [...checkedKeys],
     };
 
-    if (data.tireCategories.length === 0) {
-      data.tireCategories = "";
+    if (data.productCategories.length === 0) {
+      delete data.productCategories;
     }
 
-    data.year = choiseDate;
-    if (status === "draft") {
-      data.status = false;
-    }
-
+    if (status === "draft") data.status = false;
     const sendData = convertFromdata(data);
-
-    props.updateTire(props.match.params.id, sendData);
-  };
-
-  const handleDate = (date, dateString) => {
-    setChoiseDate(dateString);
+    props.saveProduct(sendData);
   };
 
   const handleRemove = (stType, file) => {
-    let index;
-    let deleteFile;
-    let list;
-
-    index = pictures.indexOf(file);
-    deleteFile = pictures[index].name;
-    list = pictures.slice();
+    let index = pictures.indexOf(file);
+    let deleteFile = pictures[index].name;
+    let list = pictures.slice();
     list.splice(index, 1);
     setPictures(list);
 
-    setDeleteFiles((bf) => [...bf, deleteFile]);
+    axios
+      .delete("/imgupload", { data: { file: deleteFile } })
+      .then((succ) => {
+        toastControl("success", "Амжилттай файл устгагдлаа");
+      })
+      .catch((error) =>
+        toastControl("error", "Файл устгах явцад алдаа гарлаа")
+      );
   };
 
   // CONFIGS
@@ -164,6 +154,7 @@ const Add = (props) => {
     };
 
     fmData.append("file", file);
+
     try {
       const res = await axios.post("/imgupload", fmData, config);
       const img = {
@@ -191,38 +182,20 @@ const Add = (props) => {
     listType: "picture",
   };
 
-  // -- TREE FUNCTIONS
-  const onExpand = (expandedKeysValue) => {
-    setExpandedKeys(expandedKeysValue);
-    setAutoExpandParent(false);
-  };
-
-  const onCheck = (checkedKeysValue) => {
-    // console.log(checkedKeysValue);
-    setCheckedKeys(checkedKeysValue);
-  };
-
-  const onSelect = (selectedKeysValue, info) => {
-    // console.log("onSelect", info);
-    setSelectedKeys(selectedKeysValue);
-  };
-
   // USEEFFECT
   useEffect(() => {
-    init();
-    const fetchData = async () => {
-      const result = await axios.get("/tires/groups");
-      if (result && result.data) {
-        setAutoComplete(() => ({ ...result.data }));
-      } else if (result && result.error) {
-        toastControl("error", result.error);
-      }
-    };
+    const fetchData = async () => {};
 
     fetchData().catch((err) => console.log(err));
+    init();
 
     return () => clear();
   }, []);
+
+  useEffect(() => {
+    const data = menuGenerateData(props.categories);
+    setGData(data);
+  }, [props.categories]);
 
   // Ямар нэгэн алдаа эсвэл амжилттай үйлдэл хийгдвэл энд useEffect барьж аваад TOAST харуулна
   useEffect(() => {
@@ -232,47 +205,14 @@ const Add = (props) => {
   useEffect(() => {
     if (props.success) {
       toastControl("success", props.success);
-      setTimeout(() => props.history.replace("/tire"), 2000);
+      setTimeout(() => props.history.replace("/product"), 2000);
     }
   }, [props.success]);
-
-  useEffect(() => {
-    if (props.tire) {
-      form.setFieldsValue({ ...props.tire });
-      setCheckedRadio({
-        status: props.tire.status,
-        star: props.tire.star,
-        isDiscount: props.tire.isDiscount,
-      });
-
-      setChoiseDate(props.tire.year);
-
-      if (props.tire.tireCategories && props.tire.tireCategories.length > 0) {
-        setCheckedKeys(() => {
-          return props.tire.tireCategories.map((cat) => cat._id);
-        });
-      }
-
-      props.tire.pictures &&
-        props.tire.pictures.length > 0 &&
-        setPictures(
-          props.tire.pictures.map((img) => ({
-            name: img,
-            url: `${base.cdnUrl}${img}`,
-          }))
-        );
-    }
-  }, [props.tire]);
-
-  useEffect(() => {
-    const data = menuGenerateData(props.categories);
-    setGData(data);
-  }, [props.categories]);
 
   return (
     <>
       <div className="content-wrapper">
-        <PageTitle name="Дугуй шинэчлэх" />
+        <PageTitle name="Сэлбэг нэмэх" />
         <div className="page-sub-menu"></div>
         <div className="content">
           <Loader show={loading.visible}> {loading.message} </Loader>
@@ -285,206 +225,46 @@ const Add = (props) => {
                       <div className="row">
                         <div className="col-12">
                           <Form.Item
-                            label="Гарчиг"
+                            label="Сэлбэгний нэр"
                             name="name"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <Input placeholder="Гарчиг оруулна уу" />
+                            <Input placeholder="Сэлбэгний нэр оруулна уу" />
                           </Form.Item>
                         </div>
                         <div className="col-12">
                           <Form.Item
-                            label="Үйлдвэрлэгч"
-                            name="make"
+                            label="Тоо ширхэг"
+                            name="setOf"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <Select
-                              options={
-                                props.tiremakes &&
-                                props.tiremakes.map((make) => {
-                                  return {
-                                    value: make._id,
-                                    label: make.name,
-                                  };
-                                })
-                              }
-                              placeholder="Үйлдвэрлэгчидээс сонгох"
-                            />
+                            <Input placeholder="Багцална уу" />
                           </Form.Item>
                         </div>
                         <div className="col-12">
-                          <Form.Item label="Загвар" name="modal" hasFeedback>
-                            <Select
-                              options={
-                                props.tiremodals &&
-                                props.tiremodals.map((modal) => {
-                                  return {
-                                    value: modal._id,
-                                    label: modal.name,
-                                  };
-                                })
-                              }
-                              placeholder="Загвараас сонгох"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Өргөн"
-                            name="width"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <AutoComplete
-                              style={{ width: "100%" }}
-                              options={
-                                autoComplete &&
-                                autoComplete["width"] &&
-                                autoComplete["width"].map((el) => ({
-                                  value: el.name,
-                                }))
-                              }
-                              placeholder="Өргөн оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Хажуугийн талын хэмжээ"
-                            name="height"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <AutoComplete
-                              style={{ width: "100%" }}
-                              options={
-                                autoComplete &&
-                                autoComplete["height"] &&
-                                autoComplete["height"].map((el) => ({
-                                  value: el.name,
-                                }))
-                              }
-                              placeholder="Хажуугийн талын хэмжээ оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Диаметрын хэмжээ"
-                            name="diameter"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <AutoComplete
-                              options={
-                                autoComplete &&
-                                autoComplete["diameter"] &&
-                                autoComplete["diameter"].map((el) => ({
-                                  value: el.name,
-                                }))
-                              }
-                              style={{ width: "100%" }}
-                              placeholder="Диаметрын хэмжээ оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Үйлдвэрлэгдсэн огноо"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <DatePicker
-                              style={{ width: "100%" }}
-                              picker="year"
-                              placeholder="Огноо сонгоно уу"
-                              defaultValue={dayjs(choiseDate)}
-                              onChange={handleDate}
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Ашиглалтын хувь"
-                            name="use"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <InputNumber
-                              style={{ width: "100%" }}
-                              placeholder="Ашиглалтын хувь оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
-                          <Form.Item
-                            label="Улилрал"
-                            name="season"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <Select
-                              options={[
-                                {
-                                  value: "summer",
-                                  label: "Зуны",
-                                },
-                                {
-                                  value: "winter",
-                                  label: "Өвлийн",
-                                },
-                                {
-                                  value: "allin",
-                                  label: "4 Улилралын",
-                                },
-                              ]}
-                              placeholder="Загвараас сонгох"
-                            />
-                          </Form.Item>
-                        </div>
-                        <div className="col-4">
                           <Form.Item
                             label="Үнэ"
                             name="price"
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <InputNumber
-                              style={{ width: "100%" }}
-                              placeholder="Үнэ оруулна уу"
-                            />
+                            <Input placeholder="Үнэ оруулна уу" />
                           </Form.Item>
                         </div>
-                        {checkedRadio.isDiscount === true && (
-                          <div className="col-4">
+                        {checkedRadio.isDiscount == true && (
+                          <div className="col-12">
                             <Form.Item
-                              label="Хямдарсан үнэ"
+                              label="Хөнгөлөлтэй үнэ"
                               name="discount"
                               rules={[requiredRule]}
                               hasFeedback
                             >
-                              <InputNumber
-                                style={{ width: "100%" }}
-                                placeholder="Хямдарсан үнэ оруулна уу"
-                              />
+                              <Input placeholder="Хөнгөлөлтэй үнэ оруулна уу" />
                             </Form.Item>
                           </div>
                         )}
-                        <div className="col-4">
-                          <Form.Item
-                            label="Багц"
-                            name="setOf"
-                            rules={[requiredRule]}
-                            hasFeedback
-                          >
-                            <InputNumber
-                              style={{ width: "100%" }}
-                              placeholder="Багц оруулна уу"
-                            />
-                          </Form.Item>
-                        </div>
 
                         <div className="col-12">
                           <Form.Item
@@ -620,7 +400,6 @@ const Add = (props) => {
                               checkedChildren="Зарагдаагүй"
                               unCheckedChildren="Зарагдсан"
                               size="medium"
-                              defaultChecked
                               checked={checkedRadio.status}
                               onChange={(checked) =>
                                 setCheckedRadio((bc) => ({
@@ -659,6 +438,22 @@ const Add = (props) => {
                             />
                           </Form.Item>
                         </div>
+                        <div className="col-12">
+                          <Form.Item label="Шинэ хуучин эсэх" name="isNew">
+                            <Switch
+                              checkedChildren="Шинэ"
+                              unCheckedChildren="Хуучин"
+                              size="medium"
+                              checked={checkedRadio.isNew}
+                              onChange={(checked) =>
+                                setCheckedRadio((bc) => ({
+                                  ...bc,
+                                  isNew: checked,
+                                }))
+                              }
+                            />
+                          </Form.Item>
+                        </div>
                       </div>
                     </div>
                     <div className="card-footer">
@@ -672,14 +467,14 @@ const Add = (props) => {
                             form
                               .validateFields()
                               .then((values) => {
-                                handleEdit(values);
+                                handleAdd(values);
                               })
                               .catch((info) => {
                                 // console.log(info);
                               });
                           }}
                         >
-                          Хадгалах
+                          Нэмэх
                         </Button>
                         <Button
                           key="draft"
@@ -688,7 +483,7 @@ const Add = (props) => {
                             form
                               .validateFields()
                               .then((values) => {
-                                handleEdit(values, "draft");
+                                handleAdd(values, "draft");
                               })
                               .catch((info) => {
                                 // console.log(info);
@@ -756,24 +551,17 @@ const Add = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    success: state.tireReducer.success,
-    error: state.tireReducer.error,
-    loading: state.tireReducer.loading,
-    tiremakes: state.tireMakeReducer.tiremakes,
-    tiremodals: state.tireModalReducer.tiremodals,
-    tire: state.tireReducer.tire,
-    categories: state.tireCategoryReducer.categories,
+    success: state.productReducer.success,
+    error: state.productReducer.error,
+    loading: state.productReducer.loading,
+    categories: state.productCategoryReducer.categories,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    tinymceAddPhoto: (file) => dispatch(tinymceAddPhoto(file)),
-    loadTireMake: () => dispatch(loadTireMake()),
-    loadTireModal: () => dispatch(loadTireModal()),
-    loadTireCategories: () => dispatch(loadTireCategories()),
-    updateTire: (id, data) => dispatch(actions.updateTire(id, data)),
-    getTire: (id) => dispatch(actions.getTire(id)),
+    loadProductCategories: () => dispatch(loadProductCategories()),
+    saveProduct: (data) => dispatch(actions.saveProduct(data)),
     clear: () => dispatch(actions.clear()),
     clearCat: () => dispatch(clearCat()),
   };
