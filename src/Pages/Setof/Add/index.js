@@ -233,7 +233,7 @@ const Add = (props) => {
   useEffect(() => {
     if (props.success) {
       toastControl("success", props.success);
-      setTimeout(() => props.history.replace("/tire"), 2000);
+      setTimeout(() => props.history.replace("/set"), 2000);
     }
   }, [props.success]);
 

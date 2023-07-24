@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, Form, Input, Switch, Tree } from "antd";
+import { Button, Modal, Form, Input, Switch, Tree, message } from "antd";
 import { connect } from "react-redux";
 
 // Actions
@@ -10,6 +10,10 @@ import PageTitle from "../../../Components/PageTitle";
 import Menus from "../menu";
 import { toastControl } from "../../../lib/toasControl";
 import Loader from "../../../Components/Generals/Loader";
+import Dragger from "antd/lib/upload/Dragger";
+import base from "src/base";
+import axios from "../../../axios-base";
+import { InboxOutlined } from "@ant-design/icons";
 
 const menuGenerateData = (categories) => {
   let datas = [];
@@ -48,6 +52,7 @@ const ProductCategories = (props) => {
     parent: false,
   });
   const [isParent, setIsParent] = useState(false);
+  const [picture, setPicture] = useState({});
 
   // USEEFFECTS
   useEffect(() => {
@@ -87,12 +92,21 @@ const ProductCategories = (props) => {
   useEffect(() => {
     if (props.category) {
       setSelectData(props.category);
+      if (props.category.picture) {
+        const url = base.cdnUrl + props.category.picture;
+        const img = {
+          name: props.category.picture,
+          url,
+        };
+        setPicture(img);
+      }
     }
   }, [props.category]);
 
   // FUNCTIONS
   const init = () => {
     props.loadProductCategories();
+    setPicture({});
     return () => {
       clear();
     };
@@ -100,6 +114,7 @@ const ProductCategories = (props) => {
 
   const clear = () => {
     props.clear();
+    setPicture({});
     form.resetFields();
   };
 
@@ -178,16 +193,20 @@ const ProductCategories = (props) => {
 
   // -- CRUD FUNCTIONS
   const add = (values) => {
+    if (picture) values.picture = picture.name;
     props.createCategory(values);
   };
 
   const addParent = (values) => {
     values.parentId = selectData._id;
+    if (picture) values.picture = picture.name;
     props.createCategory(values);
   };
 
   const editMenu = (values) => {
+    if (picture) values.picture = picture.name;
     props.updateProductCategory(values, select[0]);
+
     handleCancel();
   };
 
@@ -211,6 +230,7 @@ const ProductCategories = (props) => {
       }
       case "parent": {
         if (select && select.length === 1) {
+          setPicture({});
           setVisible((sb) => ({ ...sb, [modal]: true }));
         } else {
           toastControl("error", "Нэг өгөгдөл сонгоно уу");
@@ -219,7 +239,17 @@ const ProductCategories = (props) => {
       }
       case "edit": {
         if (select && select.length === 1) {
+          setPicture({});
+          if (props.category.picture) {
+            const url = base.cdnUrl + props.category.picture;
+            const img = {
+              name: props.category.picture,
+              url,
+            };
+            setPicture(img);
+          }
           form.setFieldsValue(props.category);
+
           setVisible((sb) => ({ ...sb, [modal]: true }));
         } else {
           toastControl("error", "Нэг өгөгдөл сонгоно уу");
@@ -236,6 +266,61 @@ const ProductCategories = (props) => {
   const handleCancel = () => {
     setVisible((sb) => Object.keys(sb).map((el) => (sb[el] = false)));
     clear();
+  };
+
+  const uploadImage = async (options) => {
+    const { onSuccess, onError, file, onProgress } = options;
+    const fmData = new FormData();
+    const config = {
+      headers: { "content-type": "multipart/form-data" },
+      onUploadProgress: (event) => {
+        const percent = Math.floor((event.loaded / event.total) * 100);
+        onProgress({ percent: (event.loaded / event.total) * 100 });
+      },
+    };
+
+    fmData.append("file", file);
+    try {
+      const res = await axios.post("/imgupload", fmData, config);
+      const img = {
+        name: res.data.data,
+        url: `${base.cdnUrl}${res.data.data}`,
+      };
+      setPicture(img);
+
+      onSuccess("Ok");
+      message.success(res.data.data + " Хуулагдлаа");
+      return img;
+    } catch (err) {
+      toastControl("error", err);
+      onError({ err });
+      return false;
+    }
+  };
+
+  const handleRemove = (stType, file) => {
+    let index;
+
+    setPicture({});
+
+    axios
+      .delete("/imgupload", { data: { file: file.name } })
+      .then((succ) => {
+        toastControl("success", "Амжилттай файл устгагдлаа");
+      })
+      .catch((error) =>
+        toastControl("error", "Файл устгах явцад алдаа гарлаа")
+      );
+  };
+
+  const uploadOptions = {
+    onRemove: (file) => handleRemove("picture", file),
+    fileList: picture && picture.name && [picture],
+    customRequest: (options) => uploadImage(options),
+    accept: "image/*",
+    name: "picture",
+    listType: "picture",
+    maxCount: 1,
   };
 
   return (
@@ -356,6 +441,17 @@ const ProductCategories = (props) => {
                 <Input placeholder="Ангилалын нэрийг оруулна уу" />
               </Form.Item>
             </div>
+            <div className="col-12 drag">
+              <Dragger {...uploadOptions} className="upload-list-inline">
+                <p className="ant-upload-drag-icon">
+                  <InboxOutlined />
+                </p>
+                <p className="ant-upload-text">
+                  Толгой дээр харагдах зургаа энэ хэсэгт чирч оруулна уу
+                </p>
+                <p className="ant-upload-hint">Нэг файл хуулах боломжтой</p>
+              </Dragger>
+            </div>
           </div>
         </Form>
       </Modal>
@@ -402,6 +498,17 @@ const ProductCategories = (props) => {
                 <Input placeholder="Дэд ангилалын нэрийг оруулна уу" />
               </Form.Item>
             </div>
+            <div className="col-12 drag">
+              <Dragger {...uploadOptions} className="upload-list-inline">
+                <p className="ant-upload-drag-icon">
+                  <InboxOutlined />
+                </p>
+                <p className="ant-upload-text">
+                  Толгой дээр харагдах зургаа энэ хэсэгт чирч оруулна уу
+                </p>
+                <p className="ant-upload-hint">Нэг файл хуулах боломжтой</p>
+              </Dragger>
+            </div>
           </div>
         </Form>
       </Modal>
@@ -447,6 +554,17 @@ const ProductCategories = (props) => {
               >
                 <Input placeholder="Ангилалын нэрийг оруулна уу" />
               </Form.Item>
+            </div>
+            <div className="col-12 drag">
+              <Dragger {...uploadOptions} className="upload-list-inline">
+                <p className="ant-upload-drag-icon">
+                  <InboxOutlined />
+                </p>
+                <p className="ant-upload-text">
+                  Толгой дээр харагдах зургаа энэ хэсэгт чирч оруулна уу
+                </p>
+                <p className="ant-upload-hint">Нэг файл хуулах боломжтой</p>
+              </Dragger>
             </div>
           </div>
         </Form>

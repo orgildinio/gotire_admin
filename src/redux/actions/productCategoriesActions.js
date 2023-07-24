@@ -192,12 +192,14 @@ export const saveProductCategory = (category) => {
     dispatch(saveProductCategoryStart());
     let data = {
       name: category.name,
+      picture: category.picture,
       status: category.status,
     };
 
     if (category.parentId !== null) {
       data = {
         name: category.name,
+        picture: category.picture,
         parentId: category.parentId,
       };
     }
@@ -246,6 +248,7 @@ export const updateProductCategory = (category, id) => {
     dispatch(updateProductCategoryStart());
     const data = {
       name: category.name,
+      picture: category.picture,
     };
 
     axios

@@ -279,7 +279,7 @@ const Edit = (props) => {
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <Input placeholder="Багцална уу" />
+                            <Input placeholder="Бэлэн байгаа тоо ширхэгийг оруулна уу" />
                           </Form.Item>
                         </div>
                         <div className="col-12">
@@ -289,7 +289,7 @@ const Edit = (props) => {
                             rules={[requiredRule]}
                             hasFeedback
                           >
-                            <Input placeholder="Үнэ оруулна уу" />
+                            <Input placeholder="Нэг ширхэгийн үнийг оруулна уу" />
                           </Form.Item>
                         </div>
                         {checkedRadio.isDiscount == true && (
