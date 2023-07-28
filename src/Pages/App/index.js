@@ -39,7 +39,7 @@ import NewsEdit from "../News/Edit";
 import NewsCategories from "../News/News_categories";
 // ORDER
 import Order from "../Order";
-import OrderEdit from "../Order/Edit";
+import OrderView from "../Order/Views";
 // Page
 import PageAdd from "../Page/Add";
 import PageEdit from "../Page/Edit";
@@ -149,7 +149,7 @@ function App(props) {
               <Route path={"/invoice/view/:id"} component={InvoiceView} />
               <Route path="/invoice" exact component={Invoice} />
               // Order
-              <Route path={"/order/view/:id"} component={OrderEdit} />
+              <Route path={"/order/view/:id"} component={OrderView} />
               <Route path="/order" exact component={Order} />
               //Page
               <Route path={"/pages/edit/:id"} component={PageEdit} />

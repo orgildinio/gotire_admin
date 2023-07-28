@@ -17,9 +17,9 @@ import { toastControl } from "../../lib/toasControl";
 import Loader from "../../Components/Generals/Loader";
 
 // Actions
-import * as actions from "../../redux/actions/galleryActions";
+import * as actions from "../../redux/actions/orderActions";
 
-const Gallery = (props) => {
+const Order = (props) => {
   const searchInput = useRef(null);
   //STATES
   const [searchText, setSearchText] = useState("");
@@ -188,31 +188,21 @@ const Gallery = (props) => {
     },
 
     {
-      dataIndex: "wheels",
-      key: "wheels",
-      title: "Захиалсан обуд",
+      dataIndex: "carts",
+      key: "carts",
+      title: "Захиалсан бараанууд",
       status: true,
       render: (text, record) => {
-        return record.wheels.map((wheel) => wheel.productInfo.wheelCode + ",");
+        return record.carts.map((el) => <Tag color="blue"> {el.code} </Tag>);
       },
     },
 
     {
-      dataIndex: "tires",
-      key: "tires",
-      title: "Захиалсан дугуй",
-      status: true,
-      render: (text, record) => {
-        return record.tires.map((tire) => tire.productInfo.tireCode + ",");
-      },
-    },
-
-    {
-      dataIndex: "totalPrice",
-      key: "totalPrice",
+      dataIndex: "total",
+      key: "total",
       title: "Захиалгын нийт дүн",
       status: true,
-      ...getColumnSearchProps("totalPrice"),
+      ...getColumnSearchProps("total"),
       sorter: (a, b) => handleSort(),
     },
 
@@ -260,7 +250,7 @@ const Gallery = (props) => {
         return (
           <button
             className="changePasswordBtn"
-            onClick={() => history.push(`/order/views/${record.key}`)}
+            onClick={() => history.push(`/order/view/${record.key}`)}
           >
             Дэлгэрэнгүй
           </button>
@@ -269,8 +259,8 @@ const Gallery = (props) => {
     },
 
     {
-      dataIndex: "userId",
-      key: "userId",
+      dataIndex: "createUser",
+      key: "createUser",
       title: "Захиалсан",
       status: false,
       ...getColumnSearchProps("Захиалсан"),
@@ -305,18 +295,6 @@ const Gallery = (props) => {
 
   const [cloneColumns, setCloneColumns] = useState(columns);
 
-  const handleEdit = () => {
-    if (selectedRowKeys.length != 1) {
-      toastControl("error", "Нэг өгөгдөл сонгоно уу");
-    } else {
-      history.push(`/order/edit/${selectedRowKeys[0]}`);
-    }
-  };
-
-  const handleDelete = () => {
-    props.deleteMultGallery(selectedRowKeys);
-  };
-
   // -- MODAL STATE
   const [visible, setVisible] = useState({
     delete: false,
@@ -345,7 +323,7 @@ const Gallery = (props) => {
   useEffect(() => {
     if (querys) {
       const query = queryBuild();
-      props.loadGallery(query);
+      props.loadOrder(query);
     }
   }, [querys]);
 
@@ -365,21 +343,22 @@ const Gallery = (props) => {
     setLoading({ visible: props.loading, message: "Түр хүлээнэ үү" });
   }, [props.loading]);
 
-  // -- SERVICES GET DONE EFFECT
+  // --  GET DONE EFFECT
   useEffect(() => {
-    if (props.gallerys) {
+    if (props.orders) {
       const refData = [];
 
-      props.gallerys.length > 0 &&
-        props.gallerys.map((el) => {
+      props.orders.length > 0 &&
+        props.orders.map((el) => {
           const key = el._id;
           delete el._id;
           el.status = el.status == true ? "Идэвхтэй" : "Идэвхгүй";
           el.paid = el.paid == true ? "Төлбөр төлөгдсөн" : "Төлбөр төлөгдөөгүй";
           el.paidType = el.paidType == "qpay" ? "Qpay" : "Банкаар шилжүүлэх";
-          el.totalPrice = new Intl.NumberFormat().format(el.totalPrice);
+          el.total = new Intl.NumberFormat().format(el.total) + "₮";
           el.createUser = el.createUser && el.createUser.firstName;
           el.updateUser = el.updateUser && el.updateUser.firstName;
+
           el.createAt = moment(el.createAt)
             .utcOffset("+0800")
             .format("YYYY-MM-DD HH:mm:ss");
@@ -396,7 +375,7 @@ const Gallery = (props) => {
       // console.log(refData);
       setData(refData);
     }
-  }, [props.gallerys]);
+  }, [props.orders]);
 
   // Start moment
   useEffect(() => {
@@ -414,16 +393,16 @@ const Gallery = (props) => {
       pagination: { ...tbf.pagination, total, pageSize },
     }));
   }, [props.pagination]);
+
   // -- INIT
   const init = () => {
     const query = queryBuild();
-    props.loadGallery(`${query}`);
+    props.loadOrder(`${query}`);
   };
 
   const clear = () => {};
 
   // -- HANDLE FUNCTIONS
-
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
@@ -523,7 +502,7 @@ const Gallery = (props) => {
       }
       case "edit": {
         if (selectedRowKeys && selectedRowKeys.length === 1) {
-          props.history.replace("/gallery/edit/" + selectedRowKeys[0]);
+          props.history.replace("/order/edit/" + selectedRowKeys[0]);
         } else {
           toastControl("error", "Нэг өгөгдөл сонгоно уу");
         }
@@ -571,7 +550,7 @@ const Gallery = (props) => {
   // -- CONVER JSON  TO EXCEL
   const exportExcel = async () => {
     const query = queryBuild();
-    const response = await axios.get("gallerys/excel?" + query);
+    const response = await axios.get("orders/excel?" + query);
     let excelData = [];
     if (response) {
       const data = response.data.data;
@@ -650,14 +629,14 @@ const Gallery = (props) => {
                         <i className="fas fa-redo"></i>
                       </button>
                     </Tooltip>
-                    <Tooltip placement="left" title="Excel файл болгон татах">
+                    {/* <Tooltip placement="left" title="Excel файл болгон татах">
                       <button
                         className="datatable-tool"
                         onClick={() => exportExcel()}
                       >
                         <i className="far fa-file-excel"></i>
                       </button>
-                    </Tooltip>
+                    </Tooltip> */}
                     <Tooltip placement="left" title="Баганын тохиргоо">
                       <button
                         className="datatable-tool"
@@ -748,7 +727,7 @@ const Gallery = (props) => {
             htmlType="submit"
             type="danger"
             loading={loading.visible}
-            onClick={() => handleDelete(cloneColumns)}
+            // onClick={() => handleDelete(cloneColumns)}
           >
             Устгах
           </Button>,
@@ -769,22 +748,21 @@ const Gallery = (props) => {
 
 const mapStateToProps = (state) => {
   return {
-    loading: state.galleryReducer.loading,
-    success: state.galleryReducer.success,
-    error: state.galleryReducer.error,
-    gallerys: state.galleryReducer.gallerys,
-    pagination: state.galleryReducer.paginationLast,
-    excelData: state.galleryReducer.excelData,
+    loading: state.orderReducer.loading,
+    success: state.orderReducer.success,
+    error: state.orderReducer.error,
+    orders: state.orderReducer.orders,
+    pagination: state.orderReducer.paginationLast,
   };
 };
 
 const mapDispatchToProp = (dispatch) => {
   return {
-    loadGallery: (query) => dispatch(actions.loadGallery(query)),
-    deleteMultGallery: (ids) => dispatch(actions.deleteMultGallery(ids)),
+    loadOrder: (query) => dispatch(actions.loadOrder(query)),
+    deleteMultOrder: (ids) => dispatch(actions.deleteMultOrder(ids)),
     getExcelData: (query) => dispatch(actions.getExcelData(query)),
     clear: () => dispatch(actions.clear()),
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProp)(Gallery);
+export default connect(mapStateToProps, mapDispatchToProp)(Order);

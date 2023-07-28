@@ -37,6 +37,7 @@ import setOfReducer from "./redux/reducer/setOfReducer";
 import setofCategoryReducer from "./redux/reducer/setofCategoryReducer";
 import productReducer from "./redux/reducer/productReducer";
 import productCategoryReducer from "./redux/reducer/productCategoryReducer";
+import orderReducer from "./redux/reducer/orderReducer";
 // styles
 import "./index.css";
 
@@ -83,6 +84,7 @@ const reducers = combineReducers({
   setOfReducer,
   productReducer,
   productCategoryReducer,
+  orderReducer,
 });
 
 const middlewares = [loggerMiddlaware, thunk];

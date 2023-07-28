@@ -125,7 +125,7 @@ const Side = (props) => {
                 <span class="right badge badge-danger">{count}</span>
               </NavLink>
             </li>
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <NavLink
                 to="/invoice"
                 className="nav-link"
@@ -134,7 +134,7 @@ const Side = (props) => {
                 <i className="nav-icon fa fa-book" />
                 <p>Нэхэмжлэлүүд</p>
               </NavLink>
-            </li>
+            </li> */}
             <li className="nav-item">
               <NavLink to="/news" className="nav-link" activeClassName="active">
                 <i className="nav-icon fa fa-book" />
