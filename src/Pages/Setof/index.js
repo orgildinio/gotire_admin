@@ -437,7 +437,7 @@ const SetOf = (props) => {
             .utcOffset("+0800")
             .format("YYYY-MM-DD HH:mm:ss");
 
-          el.setProductCategories = el.setProductCategories.map(
+          el.setProductCategories =  el.setProductCategories && el.setProductCategories.map(
             (el) => el.name
           );
 
