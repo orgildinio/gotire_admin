@@ -438,11 +438,11 @@ const SetOf = (props) => {
             .format("YYYY-MM-DD HH:mm:ss");
 
           el.setProductCategories =  el.setProductCategories && el.setProductCategories.map(
-            (el) => el.name
+            (el) => el.name && el.name
           );
 
-          el.make = el.tire.make.name;
-          el.modal = el.tire.modal.name;
+          el.make = el.tire.make && el.tire.make.name && el.tire.make.name;
+          el.modal = el.tire.modal && el.tire.modal.name && el.tire.modal.name;
 
           el.use = el.tire.use;
           el.season = el.tire.season;
@@ -670,10 +670,7 @@ const SetOf = (props) => {
           if (col.key === "updateUser" && col.status === true) {
             el.updateUser = el.updateUser && el.updateUser.firstName;
           }
-          if (col.key === "categories" && col.status === true) {
-            el.categories =
-              el.categories && el.categories.map((el) => el.name).toString();
-          }
+         
           if (col.key === "pictures" && col.pictures === true) {
             el.pictures = el.pictures && base.cdnUrl + el.pictures[0];
           }
