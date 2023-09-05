@@ -246,8 +246,10 @@ const Add = (props) => {
   useEffect(() => {
     if (props.setProduct) {
       if (props.setProduct.tire) {
-        props.setProduct.tiremake = props.setProduct.tire.make._id;
-        props.setProduct.tiremodal = props.setProduct.tire.modal._id;
+        props.setProduct.tiremake =
+          props.setProduct.tire.make && props.setProduct.tire.make._id;
+        props.setProduct.tiremodal =
+          props.setProduct.tire.modal && props.setProduct.tire.modal._id;
         props.setProduct.tirewidth = props.setProduct.tire.width;
         props.setProduct.tireheight = props.setProduct.tire.height;
         props.setProduct.tirediameter = props.setProduct.tire.diameter;
@@ -277,7 +279,9 @@ const Add = (props) => {
         props.setProduct.setProductCategories.length > 0
       ) {
         setCheckedKeys(() => {
-          return props.setProduct.setProductCategories.map((cat) => cat._id);
+          return props.setProduct.setProductCategories.map(
+            (cat) => cat && cat._id && cat._id
+          );
         });
       }
 
